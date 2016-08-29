@@ -12,8 +12,8 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Ing. Micolini Orlando, Garcia Cannata, Sosa Ludueña");
 
 /* Descripcion del modulo*/
-MODULE_DESCRIPTION("Implementa una lista de enteros en un módulo"\
-					"de kernel administrable por una entrada en /proc");
+MODULE_DESCRIPTION("Implementa una Red de Petri en un módulo del kernel "\
+					"administrable por una entrada en /proc");
 
 
 #define BUFFER_LENGTH       2048
