@@ -1,1 +1,0 @@
-cmd_/home/gabriel/Documentos/PPS/Modulos_Linux/matrixmod/matrixmod.ko := ld -r -m elf_i386 -T ./scripts/module-common.lds --build-id  -o /home/gabriel/Documentos/PPS/Modulos_Linux/matrixmod/matrixmod.ko /home/gabriel/Documentos/PPS/Modulos_Linux/matrixmod/matrixmod.o /home/gabriel/Documentos/PPS/Modulos_Linux/matrixmod/matrixmod.mod.o
