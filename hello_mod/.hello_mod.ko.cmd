@@ -1,0 +1,1 @@
+cmd_/home/gabriel/Documentos/UNC/PPS/intro_modulos/hello_mod/hello_mod.ko := ld -r -m elf_x86_64 -T ./scripts/module-common.lds --build-id  -o /home/gabriel/Documentos/UNC/PPS/intro_modulos/hello_mod/hello_mod.ko /home/gabriel/Documentos/UNC/PPS/intro_modulos/hello_mod/hello_mod.o /home/gabriel/Documentos/UNC/PPS/intro_modulos/hello_mod/hello_mod.mod.o
