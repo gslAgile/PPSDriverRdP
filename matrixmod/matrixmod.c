@@ -414,6 +414,12 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
 	}
 	else
 		printk(KERN_INFO "matrixmod: La matriz I no existe!!!\n");
+  }else if( sscanf(kbuf,"crear MI %d_%d", &f, &c) == 1){
+  		
+  		printk(KERN_INFO "INFO: paso funcion crear MI\n");
+  		printk(KERN_INFO "INFO: entrada capturada: %s\n", entrada);
+    	printk(KERN_INFO "INFO: Fila ingresada: %d\n", f);
+		printk(KERN_INFO "INFO: Columna ingresada: %d\n", c);
   }
 	else
 	    printk(KERN_INFO "ERROR: comando no valido!!!\n");
