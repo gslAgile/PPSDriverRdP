@@ -21,6 +21,7 @@ MODULE_DESCRIPTION("Implementa una Red de Petri en un módulo del kernel "\
 // Funciones:
 int imprimir_matriz(struct matriz *m, char *buf, size_t len);
 void iniciar_matrices(void);
+void crear_rdp(char *entrada, char *faux, char *caux, int *f, int *c, struct matriz *m);
 void agregar_valor(char *entrada, char *vaux, char *faux, char *caux, struct matriz *m);
 
 
@@ -74,71 +75,10 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
 		agregar_valor(entrada, vaux, faux, caux, &I);
 
   }else if( sscanf(kbuf,"crear I %s",entrada) == 1) {
+
+		crear_rdp(entrada, faux, caux, &f, &c, &I);
 	 
-		if(entrada[2]< 48 || entrada[2]>57)// filas son de 2 cifras?
-		{
-			if(entrada[4] > 47 && entrada[4] < 58)// columnas son de 2 cifras?			
-			{
-				// se trata de un caso [2 cifras]x[2 cifras]
-				strncat(faux, entrada, 2);
-				strncat(caux, entrada+3, 2);
-		
-				t = sscanf(faux,"fila %d", &f);
-				t = sscanf(caux, "columna %d", &c);
-			}
-			else
-			{
-				// se trata de un caso [2 cifras]x[1 cifra]
-				strncat(faux, entrada, 2);
-				strncat(caux, entrada+3, 1);
-		
-				t = sscanf(faux,"fila %d", &f);
-				t = sscanf(caux, "columna %d", &c);
-			}
-		}
-		else if(entrada[1] < 48 || entrada[1] > 57) // filas son de una cifra?
-		{
-			if(entrada[3] > 47 && entrada[3] < 58)// columnas son de 2 cifras?
-			{
-				// se trata de un caso [1 cifra]x[2 cifras]
-				strncat(faux, entrada, 1);
-				strncat(caux, entrada+2, 2);
-		
-				t = sscanf(faux,"fila %d", &f);
-				t = sscanf(caux, "columna %d", &c);
-			}
-			else
-			{
-				// se trata de un caso [1 cifra]x[1 cifra]
-				strncat(faux, entrada, 1);
-				strncat(caux, entrada+2, 1);
-		
-				t = sscanf(faux,"fila %d", &f);
-				t = sscanf(caux, "columna %d", &c);
-			}
-			
-		}else
-		{
-			printk(KERN_INFO "ERROR: Dimension de matriz no soportada o parametros incorrectos.\n");
-			f = c = 0;
-		}
-		
-		printk(KERN_INFO "INFO: entrada capturada: %s\n", entrada);
-    	printk(KERN_INFO "INFO: Fila ingresada: %d\n", f);
-		printk(KERN_INFO "INFO: Columna ingresada: %d\n", c);
-
-		if(I.filas == 0 && f > 0 && I.columnas == 0 && c > 0 && mc[0] != 1)
-		{
-			I.filas = f;
-			I.columnas = c;
-			printk(KERN_INFO "INFO: Se asigno %d filas en matriz I exitosamente!!!\n", f);
-			printk(KERN_INFO "INFO: Se asigno %d columnas en matriz I exitosamente!!!\n", c);
-		}
-			
-		else if (mc[0] == 1) // >> Ver que no se solape con error de matriz no soportada <<
-			printk(KERN_INFO "ERROR: Filas y columnas de matriz I ya asignadas!!!\n");
-
-  }else if ( strcmp(kbuf,"borrar I\n") == 0){ // strcmp() return : 0 -> si son iguales 
+	 }else if ( strcmp(kbuf,"borrar I\n") == 0){ // strcmp() return : 0 -> si son iguales 
     if(mc[0] == 1){
 		liberar_mem(&I);
 		mc[0] = 0;
@@ -161,14 +101,13 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
 	else
 	    printk(KERN_INFO "ERROR: comando no valido!!!\n");
 
-
-  if(I.filas > 0 && I.columnas > 0 && mc[0] != 1){
-  	f= I.filas;
-  	c= I.columnas;
-  	cargar_matriz_cero(&I, f, c);
-  	printk(KERN_INFO "INFO: Matriz I creada exitosamente!!!\n");
-	mc[0]=1;
-   }
+	if(I.filas > 0 && I.columnas > 0 && mc[0] != 1){
+  		f= I.filas;
+  		c= I.columnas;
+  		cargar_matriz_cero(&I, f, c);
+  		printk(KERN_INFO "INFO: Matriz I creada exitosamente!!!\n");
+		mc[0]=1;
+   	}
 
   memset(entrada, '\0', 20); // limpiamos entrada capturada
   memset(faux, '\0', 15); // limpiamos faux 
@@ -176,6 +115,75 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
   memset(vaux, '\0', 15); // limpiamos vaux
 
   return len;
+}
+
+
+void crear_rdp(char *entrada, char *faux, char *caux, int *f, int *c, struct matriz *m)
+{
+	static int t; // f: filas
+
+	if(entrada[2]< 48 || entrada[2]>57)// filas son de 2 cifras?
+		{
+			if(entrada[4] > 47 && entrada[4] < 58)// columnas son de 2 cifras?			
+			{
+				// se trata de un caso [2 cifras]x[2 cifras]
+				strncat(faux, entrada, 2);
+				strncat(caux, entrada+3, 2);
+		
+				t = sscanf(faux,"fila %d", f);
+				t = sscanf(caux, "columna %d", c);
+			}
+			else
+			{
+				// se trata de un caso [2 cifras]x[1 cifra]
+				strncat(faux, entrada, 2);
+				strncat(caux, entrada+3, 1);
+		
+				t = sscanf(faux,"fila %d", f);
+				t = sscanf(caux, "columna %d", c);
+			}
+		}
+		else if(entrada[1] < 48 || entrada[1] > 57) // filas son de una cifra?
+		{
+			if(entrada[3] > 47 && entrada[3] < 58)// columnas son de 2 cifras?
+			{
+				// se trata de un caso [1 cifra]x[2 cifras]
+				strncat(faux, entrada, 1);
+				strncat(caux, entrada+2, 2);
+		
+				t = sscanf(faux,"fila %d", f);
+				t = sscanf(caux, "columna %d", c);
+			}
+			else
+			{
+				// se trata de un caso [1 cifra]x[1 cifra]
+				strncat(faux, entrada, 1);
+				strncat(caux, entrada+2, 1);
+		
+				t = sscanf(faux,"fila %d", f);
+				t = sscanf(caux, "columna %d", c);
+			}
+			
+		}else
+		{
+			printk(KERN_INFO "ERROR: Dimension de matriz no soportada o parametros incorrectos.\n");
+			*f = *c = 0;
+		}
+		
+		printk(KERN_INFO "INFO: entrada capturada: %s\n", entrada);
+    	printk(KERN_INFO "INFO: Fila ingresada: %d\n", *f);
+		printk(KERN_INFO "INFO: Columna ingresada: %d\n", *c);
+
+		if(m->filas == 0 && *f > 0 && m->columnas == 0 && *c > 0 && mc[0] != 1)
+		{
+			m->filas = *f;
+			m->columnas = *c;
+			printk(KERN_INFO "INFO: Se asigno %d filas en matriz I exitosamente!!!\n", *f);
+			printk(KERN_INFO "INFO: Se asigno %d columnas en matriz I exitosamente!!!\n", *c);
+		}
+
+		else if (mc[0] == 1) // >> Ver que no se solape con error de matriz no soportada <<
+			printk(KERN_INFO "ERROR: Filas y columnas de matriz I ya asignadas!!!\n");
 }
 
 
