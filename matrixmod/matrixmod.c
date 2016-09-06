@@ -5,6 +5,7 @@
 #include <linux/list.h>
 #include "matrices.h"
 
+
 /* Licencia del módulo */
 MODULE_LICENSE("GPL");
 
@@ -17,12 +18,15 @@ MODULE_DESCRIPTION("Implementa una Red de Petri en un módulo del kernel "\
 
 
 #define BUFFER_LENGTH       2048
+#define COMMANDSIZE			256
 
 // Funciones:
 int imprimir_matriz(struct matriz *m, char *buf, size_t len);
 void iniciar_matrices(void);
 void crear_rdp(char *entrada, char *faux, char *caux, int *f, int *c, struct matriz *m);
 void agregar_valor(char *entrada, char *vaux, char *faux, char *caux, struct matriz *m);
+int detectar_esp(char c[2] ,char *p, int *ccf);
+int detectar_char(char c[2] ,char *p);
 
 
 static struct proc_dir_entry *proc_entry; // entrada de /proc
@@ -43,7 +47,8 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
 			   // v: valor a cargar en matriz
 			   // t: test funcion sscanf
   char kbuf[BUFFER_LENGTH];//
-  char entrada[20];
+  char entrada[COMMANDSIZE];
+  char *p0; // puntero destinado para que apunte a la direccion 0 de entrada.
   char vaux[15] = "valor ";
   char faux[15] = "fila ";
   char caux[15] = "columna ";
@@ -78,7 +83,47 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
 
 		crear_rdp(entrada, faux, caux, &f, &c, &I);
 	 
-	 }else if ( strcmp(kbuf,"borrar I\n") == 0){ // strcmp() return : 0 -> si son iguales 
+  }else if( sscanf(kbuf,"crear MA %s",entrada) == 1) {
+
+		//crear_rdp(entrada, faux, caux, &f, &c, &I);
+  		int ccf; // ccf: contador de cifras en filas
+  		ccf = 1; // inicializamos variable
+  		printk(KERN_INFO "INFO: entrada capturada para MA: %s\n", entrada);
+  		p0 = entrada; // asignamos al puntero la direccion 0 de entrada
+  		p0 = detectar_esp("_", p0, &ccf); // de determina donde empiza el primer espacio dado por "_"
+  		ccf = 0; // reinicializamos variable a uno, no se utilizo anteriormente
+  		p0 = detectar_esp("_", p0, &ccf); // avanzamos al proximo espacio para saltear las filas.
+
+  		/* Caso de una cifra en filas*/
+  		char *s2; // puntero donde almacenaremos la direccion de un caracter
+   		char s1[10];
+		s2 = entrada; // inicializamos direccion de s2
+		s2 = detectar_char("_", s2)+1; // detectamos el primer espacio "_" nuevamente.
+  		if(entrada[(int)(s2)] == "-")
+  			ccf = ccf -1;
+
+  		strncpy( s1, s2, ccf);
+  		t = sscanf(s1,"%d", &f);
+  		if(t == 1)
+  		{
+  			printk(KERN_INFO "INFO: captura de filas para MA: %d\n", f);
+  		}
+  		else
+  			printk(KERN_INFO "INFO: Fallo captura de filas para MA\n");
+  		
+  		t = sscanf(p0,"_%d", &c);
+  		if(t == 1)
+  		{
+  			printk(KERN_INFO "INFO: captura de columnas para MA: %d\n", c);
+  		}
+  		else
+  			printk(KERN_INFO "INFO: Fallo captura de columnas para MA\n");
+  		
+  		printk(KERN_INFO "INFO: Valor ccf : %d para MA\n", ccf);
+  		memset(s1, '\0', 10); // limpiamos s1
+
+	 
+  }else if ( strcmp(kbuf,"borrar I\n") == 0){ // strcmp() return : 0 -> si son iguales 
     if(mc[0] == 1){
 		liberar_mem(&I);
 		mc[0] = 0;
@@ -101,7 +146,7 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
 	else
 	    printk(KERN_INFO "ERROR: comando no valido!!!\n");
 
-	if(I.filas > 0 && I.columnas > 0 && mc[0] != 1){
+	if(I.filas > 0 && I.columnas > 0 && mc[0] != 1){ /*Verificar si se puede colacar en funcion crear_rdp() ya que funciona*/
   		f= I.filas;
   		c= I.columnas;
   		cargar_matriz_cero(&I, f, c);
@@ -109,13 +154,65 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
 		mc[0]=1;
    	}
 
-  memset(entrada, '\0', 20); // limpiamos entrada capturada
+  memset(entrada, '\0', COMMANDSIZE); // limpiamos entrada capturada
   memset(faux, '\0', 15); // limpiamos faux 
   memset(caux, '\0', 15); // limpiamos caux
   memset(vaux, '\0', 15); // limpiamos vaux
 
   return len;
 }
+
+
+/*
+* Descripcion: Esta funcion detecta la posicion de un caracter (pasado por paramentro)
+* sobre la cadena a la que apunte el puntero *p
+* @param c[2]: caracter a detectar
+* @param *p: puntero que apunta a la cadena donde se busca el espacio ("_")
+* @param *ccf: puntero que apunta a la direccion de un entero donde se almacena
+* la cantidad de avances hasta encontrar el espacio.
+* @return: retorna la direccion donde se encontro el espacio.
+*/
+int detectar_esp(char c[2], char *p, int *ccf)
+{
+	int i;
+	p = p + 1; // avanzamos un lugar suponiendo que el primero no es "_"
+  	for (i = 0; i < COMMANDSIZE; i++)
+  	{
+  		if(strncmp(p,c, 1) == 0)
+  			break;
+  		else
+  		{
+  			p = p + 1;
+  			*ccf = *ccf + 1;
+  		}
+  	}
+
+  	return p;
+}
+
+/*
+* Descripcion: Esta funcion detecta la posicion de un caracter (pasado por paramentro)
+* sobre la cadena a la que apunte el puntero *p
+* @param c[2]: caracter a detectar
+* @param *p: puntero que apunta a la cadena donde se busca el espacio ("_")
+* la cantidad de avances hasta encontrar el espacio. Puedde mandar NULL si no
+* se nescesita
+* @return: retorna la direccion donde se encontro el espacio.
+*/
+int detectar_char(char c[2], char *p)
+{
+	int i;
+  	for (i = 0; i < COMMANDSIZE; i++)
+  	{
+  		if(strncmp(p,c, 1) == 0)
+  			break;
+  		else
+  			p = p + 1;
+  	}
+
+  	return p;
+}
+
 
 
 void crear_rdp(char *entrada, char *faux, char *caux, int *f, int *c, struct matriz *m)
