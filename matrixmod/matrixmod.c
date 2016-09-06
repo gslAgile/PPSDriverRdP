@@ -87,12 +87,11 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
 
 		//crear_rdp(entrada, faux, caux, &f, &c, &I);
   		int ccf; // ccf: contador de cifras en filas
-  		ccf = 1; // inicializamos variable
+  		ccf = 0; // inicializamos variable
   		printk(KERN_INFO "INFO: entrada capturada para MA: %s\n", entrada);
   		p0 = entrada; // asignamos al puntero la direccion 0 de entrada
-  		p0 = detectar_esp("_", p0, &ccf); // de determina donde empiza el primer espacio dado por "_"
-  		ccf = 0; // reinicializamos variable a uno, no se utilizo anteriormente
-  		p0 = detectar_esp("_", p0, &ccf); // avanzamos al proximo espacio para saltear las filas.
+  		p0 = detectar_char("_", p0); // de determina donde empiza el primer espacio dado por "_"
+  		p0 = detectar_esp("_", p0, &ccf); // avanzamos al proximo espacio para saltear las cifras de fila.
 
   		/* Caso de una cifra en filas*/
   		char *s2; // puntero donde almacenaremos la direccion de un caracter
