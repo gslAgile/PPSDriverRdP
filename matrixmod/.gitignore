@@ -74,9 +74,13 @@ Thumbs.db
 
 # Object files
 *.o
+*.cmd
 *.ko
 *.obj
 *.elf
+*.symvers
+*.mod.c
+*.order
 
 # Precompiled Headers
 *.gch
