@@ -28,6 +28,7 @@ void agregar_valor(char *entrada, char *vaux, char *faux, char *caux, struct mat
 int detectar_esp(char c[2] ,char *p, int *ccf);
 int detectar_char(char c[2] ,char *p);
 void tomar_fc(int *f, int *c, char *entrada);
+void crear_rdp2(int *f, int *c, struct matriz *m, char *entrada, int pmc);
 
 
 static struct proc_dir_entry *proc_entry; // entrada de /proc
@@ -35,6 +36,7 @@ static struct proc_dir_entry *proc_entry; // entrada de /proc
 // Variables Globales
 struct matriz A; // Matriz A de prueba
 struct matriz I; // Matriz de incidencia
+struct matriz MA; // Vector de marcdo inicial
 int mc[10]; // mc: vector para detectar la creacion de las matrices en el modulo.
 
 
@@ -85,8 +87,10 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
 	 
   }else if( sscanf(kbuf,"crear MA %s",entrada) == 1) {
 
+  		crear_rdp2(&f, &c, &MA, entrada, 1); /* 1: hace referencia a mc[1] para detectar que se creo
+  											       una matriz en referencia a esa posicion, en este caso MA*/
   		/*Tomar valores de filas y columnas segun la entrada*/
-  		tomar_fc(&f, &c, entrada);
+  		//tomar_fc(&f, &c, entrada);
   		
   }else if ( strcmp(kbuf,"borrar I\n") == 0){ // strcmp() return : 0 -> si son iguales 
     
@@ -102,14 +106,8 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
 	}
 	else
 		printk(KERN_INFO "matrixmod: La matriz I no existe!!!\n");
-  }else if( sscanf(kbuf,"%d_%d", &f, &c) == 1){
-  		
-  		printk(KERN_INFO "INFO: paso funcion crear MI\n");
-  		printk(KERN_INFO "INFO: entrada capturada: %s\n", entrada);
-    	printk(KERN_INFO "INFO: Fila ingresada: %d\n", f);
-		printk(KERN_INFO "INFO: Columna ingresada: %d\n", c);
-  }
-	else
+
+  }else
 	    printk(KERN_INFO "ERROR: comando no valido!!!\n");
 
 	if(I.filas > 0 && I.columnas > 0 && mc[0] != 1){ /*Verificar si se puede colacar en funcion crear_rdp() ya que funciona*/
@@ -222,8 +220,9 @@ void tomar_fc(int *f, int *c, char *entrada)
 
   	if(p0 == entrada)
   	{
-  		printk("ERROR: No se pudiron tomar los parametros de filas/columnas ingresados."\
+  		printk("matrixmod_error: No se pudiron tomar los parametros de filas/columnas ingresados."\
   			   "Verifique el comando ingresado es correcto.");
+  		*f=*c=0; // se asigna cero a las filas y columnas para detectar error en creacion de matriz
   	}
 
   	else
@@ -253,6 +252,50 @@ void tomar_fc(int *f, int *c, char *entrada)
 		printk(KERN_INFO "INFO: Valor ccf : %d para MA\n", ccf);
 		memset(s1, '\0', 10); // limpiamos s1
 	}
+}
+
+
+/*
+* Descripcion: Esta funcion crea una matriz, verificando que los parametros de filas y columnas
+* tomados desde una entrada del usuario sean correctos.(entrada: es un comando ingresado por el usuario)
+* @param *f: puntero a la direccion de la variable entera donde se almacena la cantidad de filas.
+* @param *c: puntero a la direccion de la variable entera donde se almacena la cantidad de columnas.
+* @param *entrada: puntero a la direccion de la entrada recibida por el usuario.
+* @param pmc: posicion de matriz a crear sobre el vector mc[]
+*/
+void crear_rdp2(int *f, int *c, struct matriz *m, char *entrada, int pmc)
+{
+	/* Tomar valores de filas y columnas segun la entrada*/
+  	tomar_fc(f, c, entrada);
+
+  	/* Verificamos filas y columnas*/
+  	if(*f < 1 || *c < 1)
+  	{
+  		printk("matrixmod_error: Filas o columnas mal ingresada.\n");
+  		printk("matrixmod_error: No se pudo crear matriz con id: %d.\n", pmc);
+  		*f=*c=0;
+  	}
+  	else
+  	{
+  		/* Si matriz no existe, asignamos filas y columnas a matriz */
+  		if(m->filas == 0 && *f > 0 && m->columnas == 0 && *c > 0 && mc[pmc] != 1)
+		{
+			m->filas = *f;
+			m->columnas = *c;
+			printk(KERN_INFO "matrixmod_info: Se asigno %d filas en matriz exitosamente!!!\n", *f);
+			printk(KERN_INFO "matrixmod_info: Se asigno %d columnas en matriz exitosamente!!!\n", *c);
+
+			if(m->filas > 0 && m->columnas > 0 && mc[pmc] != 1){
+  				cargar_matriz_cero(m, *f, *c);
+  				printk(KERN_INFO "matrixmod_info: Matriz con id: %d creada exitosamente!!!\n", pmc);
+				mc[pmc]=1; // Matriz con id: pmc creada
+   			}
+		}
+
+		/* Si matriz existe*/
+		else if (mc[pmc] == 1)
+			printk(KERN_INFO "matrixmod_error: Matriz con id: %d ya creada!!!\n", pmc);
+  	}
 }
 
 
@@ -611,8 +654,8 @@ static ssize_t matrixmod_read(struct file *filp, char __user *buf, size_t len, l
 	  printk(KERN_INFO "matrixmod: no hay nada que leer \n");
       return 0;}
 
-  if(mc[0]==1)
-  	nr_bytes=imprimir_matriz(&I, buf, len);
+  if(mc[1]==1)
+  	nr_bytes=imprimir_matriz(&MA, buf, len);
     
   else
 	printk(KERN_INFO "matrixmod: Matriz I ha sido eliminada o no fue creada. \n");
@@ -684,9 +727,10 @@ int imprimir_matriz(struct matriz *m, char *buf, size_t len)
 /* Asigna cero a las filas y columnas de todas las matrices*/
 void iniciar_matrices(void )
 {
-	I.filas = 0;
-	I.columnas = 0;
+	I.filas = I.columnas =0;
+	MA.filas = MA.columnas = 0;
 	mc[0]=0; // matriz I no creada
+	mc[1]=0; // matriz MA no creada
 }
 
 
@@ -717,6 +761,9 @@ void exit_modlist_module( void )
   // agregar --> eliminar espacio en memoria
 	if(mc[0] == 1)
 		liberar_mem(&I);
+
+	if(mc[1] == 1)
+		liberar_mem(&MA);
 
   remove_proc_entry("matrixmod", NULL); // eliminar la entrada del /proc
   printk(KERN_INFO "matrixmod: Modulo descargado.\n");
