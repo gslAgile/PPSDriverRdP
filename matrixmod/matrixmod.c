@@ -23,12 +23,11 @@ MODULE_DESCRIPTION("Implementa una Red de Petri en un módulo del kernel "\
 // Funciones:
 int imprimir_matriz(struct matriz *m, char *buf, size_t len);
 void iniciar_matrices(void);
-void crear_rdp(char *entrada, char *faux, char *caux, int *f, int *c, struct matriz *m);
 void agregar_valor(char *entrada, char *vaux, char *faux, char *caux, struct matriz *m);
 int detectar_esp(char c[2] ,char *p, int *ccf);
 int detectar_char(char c[2] ,char *p);
 void tomar_fc(int *f, int *c, char *entrada);
-void crear_rdp2(int *f, int *c, struct matriz *m, char *entrada, int pmc);
+void crear_rdp(int *f, int *c, struct matriz *m, char *entrada, int pmc);
 
 
 static struct proc_dir_entry *proc_entry; // entrada de /proc
@@ -38,6 +37,7 @@ struct matriz A; // Matriz A de prueba
 struct matriz I; // Matriz de incidencia
 struct matriz MA; // Vector de marcdo inicial
 int mc[10]; // mc: vector para detectar la creacion de las matrices en el modulo.
+int mostrar_mc; // entero identificatorio de cual de las matrices creadas mostrara para funcion read
 
 
 // Implementacion de Funciones
@@ -83,14 +83,20 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
 
   }else if( sscanf(kbuf,"crear I %s",entrada) == 1) {
 
-		crear_rdp(entrada, faux, caux, &f, &c, &I);
+		/*Tomar valores de filas y columnas segun la entrada*/
+  		tomar_fc(&f, &c, entrada);
+  		/* Creamos matriz I segun entrada recibida*/
+		crear_rdp(&f, &c, &I, entrada, 0);/* 0: hace referencia a mc[0] para detectar que se creo
+  											       una matriz en referencia a esa posicion, en este caso I*/
 	 
   }else if( sscanf(kbuf,"crear MA %s",entrada) == 1) {
 
-  		crear_rdp2(&f, &c, &MA, entrada, 1); /* 1: hace referencia a mc[1] para detectar que se creo
-  											       una matriz en referencia a esa posicion, en este caso MA*/
   		/*Tomar valores de filas y columnas segun la entrada*/
-  		//tomar_fc(&f, &c, entrada);
+  		tomar_fc(&f, &c, entrada);
+  		/* Creamos matriz MA segun entrada recibida*/
+  		crear_rdp(&f, &c, &MA, entrada, 1); /* 1: hace referencia a mc[1] para detectar que se creo
+  											       una matriz en referencia a esa posicion, en este caso MA*/
+  		
   		
   }else if ( strcmp(kbuf,"borrar I\n") == 0){ // strcmp() return : 0 -> si son iguales 
     
@@ -107,16 +113,18 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
 	else
 		printk(KERN_INFO "matrixmod: La matriz I no existe!!!\n");
 
+  }else if ( strcmp(kbuf,"mostrar I\n") == 0){ // strcmp() return : 0 -> si son iguales 
+	
+	mostrar_mc = 0; // se selecciona identificador para mostrar la matriz I
+	printk(KERN_INFO "matrixmod_info: Se asigna Matriz I para mostrar en funcion read().\n");
+
+  }else if ( strcmp(kbuf,"mostrar MA\n") == 0){ // strcmp() return : 0 -> si son iguales 
+	
+	mostrar_mc = 1; // se selecciona identificador para mostrar la matriz MA
+	printk(KERN_INFO "matrixmod_info: Se asigna Matriz MA para mostrar en funcion read().\n");
+
   }else
 	    printk(KERN_INFO "ERROR: comando no valido!!!\n");
-
-	if(I.filas > 0 && I.columnas > 0 && mc[0] != 1){ /*Verificar si se puede colacar en funcion crear_rdp() ya que funciona*/
-  		f= I.filas;
-  		c= I.columnas;
-  		cargar_matriz_cero(&I, f, c);
-  		printk(KERN_INFO "INFO: Matriz I creada exitosamente!!!\n");
-		mc[0]=1;
-   	}
 
   memset(entrada, '\0', COMMANDSIZE); // limpiamos entrada capturada
   memset(faux, '\0', 15); // limpiamos faux 
@@ -139,9 +147,8 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
 */
 int detectar_esp(char c[2], char *p, int *ccf)
 {
-	int i;
-	char *aux;
-	aux = p; // Guardamos auxiliarmente la direccion que tiene p
+	int i, aux;
+	aux = (int)p; // Guardamos auxiliarmente la direccion que tiene p
 
 	p = p + 1; // avanzamos un lugar suponiendo que el primero no es "_"
   	for (i = 0; i < COMMANDSIZE; i++)
@@ -160,7 +167,7 @@ int detectar_esp(char c[2], char *p, int *ccf)
   		printk("ERROR: No se encontro direccion de '_'\n");
   	}
 
-  	return p;
+  	return (int)p;
 }
 
 /*
@@ -175,9 +182,8 @@ int detectar_esp(char c[2], char *p, int *ccf)
 */
 int detectar_char(char c[2], char *p)
 {
-	int i;
-	char *aux;
-	aux = p; // Guardamos auxiliarmente la direccion que tiene p
+	int i, aux;
+	aux = (int)p; // Guardamos auxiliarmente la direccion que tiene p
 
 	/*Buscamos direccion de "_" avanzando para adelante*/
   	for (i = 0; i < COMMANDSIZE; i++)
@@ -193,7 +199,7 @@ int detectar_char(char c[2], char *p)
   		printk("ERROR: No se encontro direccion de '_'\n");
   	}
 
-  	return p;
+  	return (int)p;
 }
 
 
@@ -263,10 +269,10 @@ void tomar_fc(int *f, int *c, char *entrada)
 * @param *entrada: puntero a la direccion de la entrada recibida por el usuario.
 * @param pmc: posicion de matriz a crear sobre el vector mc[]
 */
-void crear_rdp2(int *f, int *c, struct matriz *m, char *entrada, int pmc)
+void crear_rdp(int *f, int *c, struct matriz *m, char *entrada, int pmc)
 {
 	/* Tomar valores de filas y columnas segun la entrada*/
-  	tomar_fc(f, c, entrada);
+  	//tomar_fc(f, c, entrada);
 
   	/* Verificamos filas y columnas*/
   	if(*f < 1 || *c < 1)
@@ -296,75 +302,6 @@ void crear_rdp2(int *f, int *c, struct matriz *m, char *entrada, int pmc)
 		else if (mc[pmc] == 1)
 			printk(KERN_INFO "matrixmod_error: Matriz con id: %d ya creada!!!\n", pmc);
   	}
-}
-
-
-void crear_rdp(char *entrada, char *faux, char *caux, int *f, int *c, struct matriz *m)
-{
-	static int t; // f: filas
-
-	if(entrada[2]< 48 || entrada[2]>57)// filas son de 2 cifras?
-		{
-			if(entrada[4] > 47 && entrada[4] < 58)// columnas son de 2 cifras?			
-			{
-				// se trata de un caso [2 cifras]x[2 cifras]
-				strncat(faux, entrada, 2);
-				strncat(caux, entrada+3, 2);
-		
-				t = sscanf(faux,"fila %d", f);
-				t = sscanf(caux, "columna %d", c);
-			}
-			else
-			{
-				// se trata de un caso [2 cifras]x[1 cifra]
-				strncat(faux, entrada, 2);
-				strncat(caux, entrada+3, 1);
-		
-				t = sscanf(faux,"fila %d", f);
-				t = sscanf(caux, "columna %d", c);
-			}
-		}
-		else if(entrada[1] < 48 || entrada[1] > 57) // filas son de una cifra?
-		{
-			if(entrada[3] > 47 && entrada[3] < 58)// columnas son de 2 cifras?
-			{
-				// se trata de un caso [1 cifra]x[2 cifras]
-				strncat(faux, entrada, 1);
-				strncat(caux, entrada+2, 2);
-		
-				t = sscanf(faux,"fila %d", f);
-				t = sscanf(caux, "columna %d", c);
-			}
-			else
-			{
-				// se trata de un caso [1 cifra]x[1 cifra]
-				strncat(faux, entrada, 1);
-				strncat(caux, entrada+2, 1);
-		
-				t = sscanf(faux,"fila %d", f);
-				t = sscanf(caux, "columna %d", c);
-			}
-			
-		}else
-		{
-			printk(KERN_INFO "ERROR: Dimension de matriz no soportada o parametros incorrectos.\n");
-			*f = *c = 0;
-		}
-		
-		printk(KERN_INFO "INFO: entrada capturada: %s\n", entrada);
-    	printk(KERN_INFO "INFO: Fila ingresada: %d\n", *f);
-		printk(KERN_INFO "INFO: Columna ingresada: %d\n", *c);
-
-		if(m->filas == 0 && *f > 0 && m->columnas == 0 && *c > 0 && mc[0] != 1)
-		{
-			m->filas = *f;
-			m->columnas = *c;
-			printk(KERN_INFO "INFO: Se asigno %d filas en matriz I exitosamente!!!\n", *f);
-			printk(KERN_INFO "INFO: Se asigno %d columnas en matriz I exitosamente!!!\n", *c);
-		}
-
-		else if (mc[0] == 1) // >> Ver que no se solape con error de matriz no soportada <<
-			printk(KERN_INFO "ERROR: Filas y columnas de matriz I ya asignadas!!!\n");
 }
 
 
@@ -654,11 +591,26 @@ static ssize_t matrixmod_read(struct file *filp, char __user *buf, size_t len, l
 	  printk(KERN_INFO "matrixmod: no hay nada que leer \n");
       return 0;}
 
-  if(mc[1]==1)
-  	nr_bytes=imprimir_matriz(&MA, buf, len);
+  switch(mostrar_mc)
+  {
+  	case 0:
+  		if(mc[0]==1)
+  			nr_bytes=imprimir_matriz(&I, buf, len);
     
-  else
-	printk(KERN_INFO "matrixmod: Matriz I ha sido eliminada o no fue creada. \n");
+  		else
+			printk(KERN_INFO "matrixmod_error: Matriz I no existe. \n");
+		break;
+  	
+  	case 1:
+  		if(mc[1]==1)
+  			nr_bytes=imprimir_matriz(&MA, buf, len);
+    
+  		else
+			printk(KERN_INFO "matrixmod_error: Matriz MA no existe.\n");
+		break;
+
+  	//default:
+  }
 
   (*off)+=len;  /* Actualizo el puntero de archivo */
   //vfree(kbuf);
@@ -731,6 +683,7 @@ void iniciar_matrices(void )
 	MA.filas = MA.columnas = 0;
 	mc[0]=0; // matriz I no creada
 	mc[1]=0; // matriz MA no creada
+	mostrar_mc = 0;
 }
 
 
