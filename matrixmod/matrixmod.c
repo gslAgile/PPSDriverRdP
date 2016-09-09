@@ -27,6 +27,7 @@ void crear_rdp(char *entrada, char *faux, char *caux, int *f, int *c, struct mat
 void agregar_valor(char *entrada, char *vaux, char *faux, char *caux, struct matriz *m);
 int detectar_esp(char c[2] ,char *p, int *ccf);
 int detectar_char(char c[2] ,char *p);
+void tomar_fc(int *f, int *c, char *entrada);
 
 
 static struct proc_dir_entry *proc_entry; // entrada de /proc
@@ -42,13 +43,12 @@ int mc[10]; // mc: vector para detectar la creacion de las matrices en el modulo
 static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t len, loff_t *off) {
 
   int available_space = BUFFER_LENGTH-1; // espacio disponible
-  int f, c, v, t; // f: filas
+  int f, c, v; // f: filas
 			   // c: columnas
 			   // v: valor a cargar en matriz
-			   // t: test funcion sscanf
+  
   char kbuf[BUFFER_LENGTH];//
   char entrada[COMMANDSIZE];
-  char *p0; // puntero destinado para que apunte a la direccion 0 de entrada.
   char vaux[15] = "valor ";
   char faux[15] = "fila ";
   char caux[15] = "columna ";
@@ -85,44 +85,11 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
 	 
   }else if( sscanf(kbuf,"crear MA %s",entrada) == 1) {
 
-		//crear_rdp(entrada, faux, caux, &f, &c, &I);
-  		int ccf; // ccf: contador de cifras en filas
-  		ccf = 0; // inicializamos variable
-  		printk(KERN_INFO "INFO: entrada capturada para MA: %s\n", entrada);
-  		p0 = entrada; // asignamos al puntero la direccion 0 de entrada
-  		p0 = detectar_char("_", p0); // de determina donde empiza el primer espacio dado por "_"
-  		p0 = detectar_esp("_", p0, &ccf); // avanzamos al proximo espacio para saltear las cifras de fila.
-
-  		/* Caso de una cifra en filas*/
-  		char *s2; // puntero donde almacenaremos la direccion de un caracter
-   		char s1[10];
-		s2 = entrada; // inicializamos direccion de s2
-		s2 = detectar_char("_", s2)+1; // detectamos el primer espacio "_" nuevamente.
-  		if(entrada[(int)(s2)] == "-")
-  			ccf = ccf -1;
-
-  		strncpy( s1, s2, ccf);
-  		t = sscanf(s1,"%d", &f);
-  		if(t == 1)
-  		{
-  			printk(KERN_INFO "INFO: captura de filas para MA: %d\n", f);
-  		}
-  		else
-  			printk(KERN_INFO "INFO: Fallo captura de filas para MA\n");
+  		/*Tomar valores de filas y columnas segun la entrada*/
+  		tomar_fc(&f, &c, entrada);
   		
-  		t = sscanf(p0,"_%d", &c);
-  		if(t == 1)
-  		{
-  			printk(KERN_INFO "INFO: captura de columnas para MA: %d\n", c);
-  		}
-  		else
-  			printk(KERN_INFO "INFO: Fallo captura de columnas para MA\n");
-  		
-  		printk(KERN_INFO "INFO: Valor ccf : %d para MA\n", ccf);
-  		memset(s1, '\0', 10); // limpiamos s1
-
-	 
   }else if ( strcmp(kbuf,"borrar I\n") == 0){ // strcmp() return : 0 -> si son iguales 
+    
     if(mc[0] == 1){
 		liberar_mem(&I);
 		mc[0] = 0;
@@ -170,10 +137,14 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
 * @param *ccf: puntero que apunta a la direccion de un entero donde se almacena
 * la cantidad de avances hasta encontrar el espacio.
 * @return: retorna la direccion donde se encontro el espacio.
+* sino se encontro se retorna la direccon inicial de *p.
 */
 int detectar_esp(char c[2], char *p, int *ccf)
 {
 	int i;
+	char *aux;
+	aux = p; // Guardamos auxiliarmente la direccion que tiene p
+
 	p = p + 1; // avanzamos un lugar suponiendo que el primero no es "_"
   	for (i = 0; i < COMMANDSIZE; i++)
   	{
@@ -184,6 +155,11 @@ int detectar_esp(char c[2], char *p, int *ccf)
   			p = p + 1;
   			*ccf = *ccf + 1;
   		}
+  	}
+
+  	if(i == COMMANDSIZE){
+  		p = aux; // volvemos a asignar direccion de inicio ya que no se encontro ningun "_"
+  		printk("ERROR: No se encontro direccion de '_'\n");
   	}
 
   	return p;
@@ -197,10 +173,15 @@ int detectar_esp(char c[2], char *p, int *ccf)
 * la cantidad de avances hasta encontrar el espacio. Puedde mandar NULL si no
 * se nescesita
 * @return: retorna la direccion donde se encontro el espacio.
+  sino se encontro se retorna la direccon inicial de *p.
 */
 int detectar_char(char c[2], char *p)
 {
 	int i;
+	char *aux;
+	aux = p; // Guardamos auxiliarmente la direccion que tiene p
+
+	/*Buscamos direccion de "_" avanzando para adelante*/
   	for (i = 0; i < COMMANDSIZE; i++)
   	{
   		if(strncmp(p,c, 1) == 0)
@@ -209,9 +190,70 @@ int detectar_char(char c[2], char *p)
   			p = p + 1;
   	}
 
+  	if(i == COMMANDSIZE){
+  		p = aux; // volvemos a asignar direccion de inicio ya que no se encontro ningun "_"
+  		printk("ERROR: No se encontro direccion de '_'\n");
+  	}
+
   	return p;
 }
 
+
+/*
+* Descripcion: toma las filas y columnas del parametro enviado por el usuario en base
+* a una entrada recibida como comando.
+* @param *f: puntero a la direccion de la variable entera donde se almacena la cantidad de filas.
+* @param *c: puntero a la direccion de la variable entera donde se almacena la cantidad de columnas.
+* @param *entrada: puntero a la direccion de la entrada recibida por el usuario.
+*/
+void tomar_fc(int *f, int *c, char *entrada)
+{
+	char *p0; // puntero destinado para que apunte a la direccion 0 de entrada.
+	char *s2; // puntero donde almacenaremos la direccion de un caracter
+   	char s1[10]; // cadena de char donde se almacenara la ultima porcion de la entrada que son columnas
+   	int ccf; // ccf: contador de cifras en filas
+   	int t; // t: test funcion sscanf
+  	
+  	ccf = 0; // inicializamos variable
+  	printk(KERN_INFO "INFO: entrada capturada para MA: %s\n", entrada);
+  	p0 = entrada; // asignamos al puntero la direccion 0 de entrada
+  	p0 = detectar_char("_", p0); // se determina donde empiza el primer espacio dado por "_"
+  	p0 = detectar_esp("_", p0, &ccf); // avanzamos al proximo espacio para saltear las cifras de fila.
+
+  	if(p0 == entrada)
+  	{
+  		printk("ERROR: No se pudiron tomar los parametros de filas/columnas ingresados."\
+  			   "Verifique el comando ingresado es correcto.");
+  	}
+
+  	else
+  	{
+  		s2 = entrada; // inicializamos direccion de s2
+		s2 = detectar_char("_", s2)+1; // detectamos el primer espacio "_" nuevamente.
+  		if(entrada[(int)(s2)] == "-") // se castea direccion de s2 a (int) para usar la direccion como entero
+  			ccf = ccf -1;
+
+		strncpy( s1, s2, ccf);
+		t = sscanf(s1,"%d", f);
+		if(t == 1)
+		{
+			printk(KERN_INFO "INFO: captura de filas para MA: %d\n", *f);
+		}
+		else
+			printk(KERN_INFO "INFO: Fallo captura de filas para MA\n");
+  		
+		t = sscanf(p0,"_%d", c);
+		if(t == 1)
+		{
+			printk(KERN_INFO "INFO: captura de columnas para MA: %d\n", *c);
+		}
+		else
+			printk(KERN_INFO "INFO: Fallo captura de columnas para MA\n");
+  		
+		printk(KERN_INFO "INFO: Valor ccf : %d para MA\n", ccf);
+		memset(s1, '\0', 10); // limpiamos s1
+	}
+}
 
 
 void crear_rdp(char *entrada, char *faux, char *caux, int *f, int *c, struct matriz *m)
