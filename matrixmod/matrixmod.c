@@ -98,6 +98,10 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
   											       una matriz en referencia a esa posicion, en este caso MA*/
   		
   		
+  }else if( sscanf(kbuf,"add MA %s", entrada) == 1){
+		
+		agregar_valor(entrada, vaux, faux, caux, &MA);
+
   }else if ( strcmp(kbuf,"borrar I\n") == 0){ // strcmp() return : 0 -> si son iguales 
     
     if(mc[0] == 1){
@@ -106,12 +110,29 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
 	}
 	else
 		 printk(KERN_INFO "matrixmod: La matriz I ya ha sido eliminada!!!\n");
+  }else if ( strcmp(kbuf,"borrar MA\n") == 0){ // strcmp() return : 0 -> si son iguales 
+    
+    if(mc[1] == 1){
+		liberar_mem(&MA);
+		mc[1] = 0;
+	}
+	else
+		 printk(KERN_INFO "matrixmod: La matriz MA no existe!!!\n");
   }else if ( strcmp(kbuf,"limpiar I\n") == 0){ // strcmp() return : 0 -> si son iguales 
+	
 	if(mc[0]==1){    
 		limpiar_matriz(&I); // matriz I se limpia toda a cero
 	}
 	else
 		printk(KERN_INFO "matrixmod: La matriz I no existe!!!\n");
+
+  }else if ( strcmp(kbuf,"limpiar MA\n") == 0){ // strcmp() return : 0 -> si son iguales 
+	
+	if(mc[1]==1){    
+		limpiar_matriz(&MA); // matriz I se limpia toda a cero
+	}
+	else
+		printk(KERN_INFO "matrixmod: La matriz MA no existe!!!\n");
 
   }else if ( strcmp(kbuf,"mostrar I\n") == 0){ // strcmp() return : 0 -> si son iguales 
 	
