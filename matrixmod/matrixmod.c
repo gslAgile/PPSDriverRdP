@@ -96,7 +96,7 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
   		/* Creamos matriz I segun entrada recibida*/
 		crear_rdp(&f, &c, &I, 0);/* 0: hace referencia a mc[0] para detectar que se creo
   											       una matriz en referencia a esa posicion, en este caso I*/
-		if(mc[0]==1)// si se creo exitosamente Matriz I
+		if(mc[0])// si se creo exitosamente Matriz I
 		{ 
 			int ff, cc;
 
@@ -117,19 +117,11 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
   		/* Creamos matriz MA segun entrada recibida*/
   		crear_rdp(&f, &c, &MI, 3); /* 3: hace referencia a mc[3] para detectar que se creo
   											       una matriz en referencia a esa posicion, en este caso MI*/
-  		int i;
-  		if(mc[1]==1)/* Si MA existe*/
-  		{
-  			for (i = 0; i <I.filas ; i++)
-			{
-				/* code */
-				MA.matriz[0][i] = MI.matriz[0][i];
-			}
-  		}	
   		
   }else if( sscanf(kbuf,"add MI %s", entrada) == 1){
 		
 		agregar_valor(entrada, vaux, faux, caux, &MI);
+		cargar_MA(); // Se actualiza cada valor de MI(marcado inicial) en MA(maracado actual)
 
   }else if ( strcmp(kbuf,"STEP_CMD\n") == 0){ // strcmp() return : 0 -> si son iguales 
 	
@@ -204,6 +196,10 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
 	
 	cargar_MA();
 	printk(KERN_INFO "matrixmod_info: Se realiza carga de MA.\n");
+
+  }else if ( strcmp(kbuf,"mostrar mc\n") == 0){ // strcmp() return : 0 -> si son iguales 
+	
+	printk(KERN_INFO "matrixmod_info: mc = [%d %d %d %d %d %d]\n", mc[0], mc[1], mc[2], mc[3], mc[4], mc[5]);
 
   }else
 	    printk(KERN_INFO "ERROR: comando no valido!!!\n");
@@ -436,7 +432,7 @@ int disparar(int id_d)
 			for (j = 0; j < I.filas; j++)
 			{
 				/* code */
-				MN.matriz[0][j] = MI.matriz[0][j] + I.matriz[j][i]*vauxiliar.matriz[i][0];
+				MN.matriz[0][j] = MA.matriz[0][j] + I.matriz[j][i]*vauxiliar.matriz[i][0];
 				if(MN.matriz[0][j]< 0)
 					return -1;
 			}
@@ -456,7 +452,7 @@ int disparar(int id_d)
 void cargar_MA(void)
 {
 	int i;
-  		if(mc[1]==1)/* Si MA existe*/
+  		if(mc[1])/* Si MA existe*/
   		{
   			for (i = 0; i <I.filas ; i++)
 			{
