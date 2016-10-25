@@ -23,6 +23,7 @@ void sumar_matriz(struct matriz *c, struct matriz *x, struct matriz *y);
 void restar_matriz(struct matriz *c, struct matriz *x, struct matriz *y);
 void mult_matriz(struct matriz *c, struct matriz *x, struct matriz *y);
 void transpuesta(struct matriz *c, struct matriz *x);
+void transpuesta_fc(struct matriz *c, struct matriz *x, int f, int col);
 void identidad(struct matriz *c, int dimension);
 
 
@@ -289,6 +290,35 @@ void transpuesta(struct matriz *c, struct matriz *x)
 	{
 		for(j=0; j < x->filas; j++)
 			c->matriz[i][j]= x->matriz[j][i];
+	}
+}
+
+/*
+* Descripcion: Funcion que obtiene la traspuesta de una matriz en base a los parametros
+* de f (filas) y c (columnas) recibidos.
+* Parametros:
+* @param *c: puntero de una estructura de tipo matriz en donde se almacenaran los
+* 			 datos resultantes de la matriz transpuesta.
+* @param *x: puntero de una estructura de tipo matriz utilizada para obtener la
+* 			 matriz transpuesta.
+* @param f: numero de filas deseado
+* @param  c: numero de columnas deseado
+
+*/
+void transpuesta_fc(struct matriz *c, struct matriz *x, int f, int col)
+{
+	int i,j;
+	if(f <= x->columnas && col <= x->filas)
+	{
+		c->filas = f;
+		c->columnas = col;
+		c->matriz = crear_matriz(c);
+
+		for(i=0; i < c->filas; i++)
+		{
+			for(j=0; j < c->columnas; j++)
+				c->matriz[i][j]= x->matriz[j][i];
+		}
 	}
 }
 

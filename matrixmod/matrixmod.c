@@ -27,7 +27,8 @@ void agregar_valor(char *entrada, char *vaux, char *faux, char *caux, struct mat
 int detectar_esp(char c[2] ,char *p, int *ccf);
 int detectar_char(char c[2] ,char *p);
 void tomar_fc(int *f, int *c, char *entrada);
-void crear_rdp(int *f, int *c, struct matriz *m, char *entrada, int pmc);
+void crear_rdp(int *f, int *c, struct matriz *m, int pmc);
+void crear_mdisparos(int c, int mc_id);
 
 
 static struct proc_dir_entry *proc_entry; // entrada de /proc
@@ -38,6 +39,8 @@ struct matriz I; // Matriz de incidencia
 struct matriz MA; // Vector de marcdo inicial
 int mc[10]; // mc: vector para detectar la creacion de las matrices en el modulo.
 int mostrar_mc; // entero identificatorio de cual de las matrices creadas mostrara para funcion read
+struct matriz disparos;  // *matriz con cada uno de los vectores disparos
+int cd; // numero de vectores y elementos en vector disparo
 
 
 // Implementacion de Funciones
@@ -86,15 +89,17 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
 		/*Tomar valores de filas y columnas segun la entrada*/
   		tomar_fc(&f, &c, entrada);
   		/* Creamos matriz I segun entrada recibida*/
-		crear_rdp(&f, &c, &I, entrada, 0);/* 0: hace referencia a mc[0] para detectar que se creo
+		crear_rdp(&f, &c, &I, 0);/* 0: hace referencia a mc[0] para detectar que se creo
   											       una matriz en referencia a esa posicion, en este caso I*/
+		if(mc[0]==1) // si se creo exitosamente Matriz I
+			crear_mdisparos(I.columnas, 2);
 	 
   }else if( sscanf(kbuf,"crear MA %s",entrada) == 1) {
 
   		/*Tomar valores de filas y columnas segun la entrada*/
   		tomar_fc(&f, &c, entrada);
   		/* Creamos matriz MA segun entrada recibida*/
-  		crear_rdp(&f, &c, &MA, entrada, 1); /* 1: hace referencia a mc[1] para detectar que se creo
+  		crear_rdp(&f, &c, &MA, 1); /* 1: hace referencia a mc[1] para detectar que se creo
   											       una matriz en referencia a esa posicion, en este caso MA*/
   		
   		
@@ -143,6 +148,11 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
 	
 	mostrar_mc = 1; // se selecciona identificador para mostrar la matriz MA
 	printk(KERN_INFO "matrixmod_info: Se asigna Matriz MA para mostrar en funcion read().\n");
+
+  }else if ( strcmp(kbuf,"mostrar disparos\n") == 0){ // strcmp() return : 0 -> si son iguales 
+	
+	mostrar_mc = 2; // se selecciona identificador para mostrar la matriz I
+	printk(KERN_INFO "matrixmod_info: Se asigna Matriz disparos para mostrar en funcion read().\n");
 
   }else
 	    printk(KERN_INFO "ERROR: comando no valido!!!\n");
@@ -225,8 +235,8 @@ int detectar_char(char c[2], char *p)
 
 
 /*
-* Descripcion: toma las filas y columnas del parametro enviado por el usuario en base
-* a una entrada recibida como comando.
+* Descripcion: toma las filas y columnas, como enteros, del parametro enviado por el usuario, en
+* caracteres, en base a una entrada recibida como comando.
 * @param *f: puntero a la direccion de la variable entera donde se almacena la cantidad de filas.
 * @param *c: puntero a la direccion de la variable entera donde se almacena la cantidad de columnas.
 * @param *entrada: puntero a la direccion de la entrada recibida por el usuario.
@@ -239,7 +249,7 @@ void tomar_fc(int *f, int *c, char *entrada)
    	int ccf; // ccf: contador de cifras en filas
    	int t; // t: test funcion sscanf
   	
-  	ccf = 0; // inicializamos variable
+  	ccf = 0; // inicializamos contador
   	printk(KERN_INFO "INFO: entrada capturada para MA: %s\n", entrada);
   	p0 = entrada; // asignamos al puntero la direccion 0 de entrada
   	p0 = detectar_char("_", p0); // se determina donde empiza el primer espacio dado por "_"
@@ -256,11 +266,13 @@ void tomar_fc(int *f, int *c, char *entrada)
   	{
   		s2 = entrada; // inicializamos direccion de s2
 		s2 = detectar_char("_", s2)+1; // detectamos el primer espacio "_" nuevamente.
+		
+		/*Si filas es numero negativo*/ //--> analizar este if que no tiene sentido ya que sscanf toma numeros negativos
   		if(entrada[(int)(s2)] == "-") // se castea direccion de s2 a (int) para usar la direccion como entero
-  			ccf = ccf -1;
+  			ccf = ccf -1;// descontamos una cifra de fila por caracter de signo negativo
 
-		strncpy( s1, s2, ccf);
-		t = sscanf(s1,"%d", f);
+		strncpy(s1, s2, ccf); // copiamos n=ccf caracteres, donde apunta s2, en s1.
+		t = sscanf(s1,"%d", f); // guardamos valor copiado en s1 como entero en f.
 		if(t == 1)
 		{
 			printk(KERN_INFO "INFO: captura de filas para MA: %d\n", *f);
@@ -287,10 +299,9 @@ void tomar_fc(int *f, int *c, char *entrada)
 * tomados desde una entrada del usuario sean correctos.(entrada: es un comando ingresado por el usuario)
 * @param *f: puntero a la direccion de la variable entera donde se almacena la cantidad de filas.
 * @param *c: puntero a la direccion de la variable entera donde se almacena la cantidad de columnas.
-* @param *entrada: puntero a la direccion de la entrada recibida por el usuario.
 * @param pmc: posicion de matriz a crear sobre el vector mc[]
 */
-void crear_rdp(int *f, int *c, struct matriz *m, char *entrada, int pmc)
+void crear_rdp(int *f, int *c, struct matriz *m, int pmc)
 {
 	/* Tomar valores de filas y columnas segun la entrada*/
   	//tomar_fc(f, c, entrada);
@@ -325,6 +336,27 @@ void crear_rdp(int *f, int *c, struct matriz *m, char *entrada, int pmc)
   	}
 }
 
+/*
+* Descripcion: Esta funcion crea los vectores de disparo asociados a la matriz de incidencia I
+* en una matriz cuyas columnas indica la cantidad de disparos a crear y su cantidad de elementos.
+* @param c: variable entera que indica la cantidad de columnas de la matriz I, para crear matriz de
+* disparos con cxc elementos representando cada disparo vectorialmente.
+* @param mc_id: identificador de matriz de disparos a crear.
+*/
+void crear_mdisparos(int c, int mc_id)
+{
+	cd = c; // se asigna a cd la cantidad de columnas
+	disparos.filas = cd;
+	disparos.columnas = cd;
+
+	identidad(&disparos, cd);
+
+	if(disparos.matriz != NULL)
+		mc[mc_id] = 1; // matriz de disparos creada con exito
+	else
+		printk(KERN_INFO "matrixmod_error: No se pudo crear Matriz con id: %d !!!\n", mc_id);
+	
+}
 
 void agregar_valor(char *entrada, char *vaux, char *faux, char *caux, struct matriz *m)
 {
@@ -629,6 +661,13 @@ static ssize_t matrixmod_read(struct file *filp, char __user *buf, size_t len, l
   		else
 			printk(KERN_INFO "matrixmod_error: Matriz MA no existe.\n");
 		break;
+	case 2:
+  		if(mc[2]==1)
+  			nr_bytes=imprimir_matriz(&disparos, buf, len);
+    
+  		else
+			printk(KERN_INFO "matrixmod_error: Matriz mdisparos no existe.\n");
+		break;
 
   	//default:
   }
@@ -702,8 +741,10 @@ void iniciar_matrices(void )
 {
 	I.filas = I.columnas =0;
 	MA.filas = MA.columnas = 0;
+	disparos.filas = disparos.columnas = 0;
 	mc[0]=0; // matriz I no creada
 	mc[1]=0; // matriz MA no creada
+	mc[2]=0; // matriz de vectores de disparos no creada
 	mostrar_mc = 0;
 }
 
@@ -738,6 +779,9 @@ void exit_modlist_module( void )
 
 	if(mc[1] == 1)
 		liberar_mem(&MA);
+
+	if(mc[2] == 1)
+		liberar_mem(&disparos);
 
   remove_proc_entry("matrixmod", NULL); // eliminar la entrada del /proc
   printk(KERN_INFO "matrixmod: Modulo descargado.\n");
