@@ -23,7 +23,7 @@ void sumar_matriz(struct matriz *c, struct matriz *x, struct matriz *y);
 void restar_matriz(struct matriz *c, struct matriz *x, struct matriz *y);
 void mult_matriz(struct matriz *c, struct matriz *x, struct matriz *y);
 void transpuesta(struct matriz *c, struct matriz *x);
-void transpuesta_fc(struct matriz *c, struct matriz *x, int f, int col);
+void transpuesta_fc(struct matriz *c, struct matriz *x, int f, int col, int id_d);
 void identidad(struct matriz *c, int dimension);
 
 
@@ -303,9 +303,10 @@ void transpuesta(struct matriz *c, struct matriz *x)
 * 			 matriz transpuesta.
 * @param f: numero de filas deseado
 * @param  c: numero de columnas deseado
+* @param  id_d: identificador de vector disparo (fila de matriz mdisparos)
 
 */
-void transpuesta_fc(struct matriz *c, struct matriz *x, int f, int col)
+void transpuesta_fc(struct matriz *c, struct matriz *x, int f, int col, int id_d)
 {
 	int i,j;
 	if(f <= x->columnas && col <= x->filas)
@@ -317,7 +318,7 @@ void transpuesta_fc(struct matriz *c, struct matriz *x, int f, int col)
 		for(i=0; i < c->filas; i++)
 		{
 			for(j=0; j < c->columnas; j++)
-				c->matriz[i][j]= x->matriz[j][i];
+				c->matriz[i][j]= x->matriz[id_d][i];
 		}
 	}
 }

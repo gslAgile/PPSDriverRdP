@@ -29,6 +29,8 @@ int detectar_char(char c[2] ,char *p);
 void tomar_fc(int *f, int *c, char *entrada);
 void crear_rdp(int *f, int *c, struct matriz *m, int pmc);
 void crear_mdisparos(int c, int mc_id);
+int disparar(int id_d);
+void cargar_MA(void);
 
 
 static struct proc_dir_entry *proc_entry; // entrada de /proc
@@ -36,7 +38,10 @@ static struct proc_dir_entry *proc_entry; // entrada de /proc
 // Variables Globales
 struct matriz A; // Matriz A de prueba
 struct matriz I; // Matriz de incidencia
-struct matriz MA; // Vector de marcdo inicial
+struct matriz MA; // Vector de marcdo actual
+struct matriz MI; // Vector de marcado inicial
+struct matriz MN; // Vector de marcado nuevo
+struct matriz vauxiliar;
 int mc[10]; // mc: vector para detectar la creacion de las matrices en el modulo.
 int mostrar_mc; // entero identificatorio de cual de las matrices creadas mostrara para funcion read
 struct matriz disparos;  // *matriz con cada uno de los vectores disparos
@@ -91,21 +96,47 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
   		/* Creamos matriz I segun entrada recibida*/
 		crear_rdp(&f, &c, &I, 0);/* 0: hace referencia a mc[0] para detectar que se creo
   											       una matriz en referencia a esa posicion, en este caso I*/
-		if(mc[0]==1) // si se creo exitosamente Matriz I
+		if(mc[0]==1)// si se creo exitosamente Matriz I
+		{ 
+			int ff, cc;
+
 			crear_mdisparos(I.columnas, 2);
+			ff = 1;
+			cc = I.filas;
+
+			crear_rdp(&ff, &cc, &MA, 1); /* 1: hace referencia a mc[1] para detectar que se creo
+  											       una matriz en referencia a esa posicion, en este caso MA*/
+			crear_rdp(&ff, &cc, &MN, 4); /* 4: hace referencia a mc[4] para detectar que se creo
+  											       una matriz en referencia a esa posicion, en este caso MN*/
+		}
 	 
-  }else if( sscanf(kbuf,"crear MA %s",entrada) == 1) {
+  }else if( sscanf(kbuf,"crear MI %s",entrada) == 1) {
 
   		/*Tomar valores de filas y columnas segun la entrada*/
   		tomar_fc(&f, &c, entrada);
   		/* Creamos matriz MA segun entrada recibida*/
-  		crear_rdp(&f, &c, &MA, 1); /* 1: hace referencia a mc[1] para detectar que se creo
-  											       una matriz en referencia a esa posicion, en este caso MA*/
+  		crear_rdp(&f, &c, &MI, 3); /* 3: hace referencia a mc[3] para detectar que se creo
+  											       una matriz en referencia a esa posicion, en este caso MI*/
+  		int i;
+  		if(mc[1]==1)/* Si MA existe*/
+  		{
+  			for (i = 0; i <I.filas ; i++)
+			{
+				/* code */
+				MA.matriz[0][i] = MI.matriz[0][i];
+			}
+  		}	
   		
-  		
-  }else if( sscanf(kbuf,"add MA %s", entrada) == 1){
+  }else if( sscanf(kbuf,"add MI %s", entrada) == 1){
 		
-		agregar_valor(entrada, vaux, faux, caux, &MA);
+		agregar_valor(entrada, vaux, faux, caux, &MI);
+
+  }else if ( strcmp(kbuf,"STEP_CMD\n") == 0){ // strcmp() return : 0 -> si son iguales 
+	
+	if(disparar(0)== 1) // Si realizo disparo exitosamente
+		printk(KERN_INFO "matrixmod_info: El disparo fue exitoso!!!\n");
+	else
+		printk(KERN_INFO "matrixmod_info: El disparo no fue exitoso!!!\n");
 
   }else if ( strcmp(kbuf,"borrar I\n") == 0){ // strcmp() return : 0 -> si son iguales 
     
@@ -147,12 +178,32 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
   }else if ( strcmp(kbuf,"mostrar MA\n") == 0){ // strcmp() return : 0 -> si son iguales 
 	
 	mostrar_mc = 1; // se selecciona identificador para mostrar la matriz MA
-	printk(KERN_INFO "matrixmod_info: Se asigna Matriz MA para mostrar en funcion read().\n");
+	printk(KERN_INFO "matrixmod_info: Se asigna vector MA para mostrar en funcion read().\n");
 
   }else if ( strcmp(kbuf,"mostrar disparos\n") == 0){ // strcmp() return : 0 -> si son iguales 
 	
 	mostrar_mc = 2; // se selecciona identificador para mostrar la matriz I
 	printk(KERN_INFO "matrixmod_info: Se asigna Matriz disparos para mostrar en funcion read().\n");
+
+  }else if ( strcmp(kbuf,"mostrar MI\n") == 0){ // strcmp() return : 0 -> si son iguales 
+	
+	mostrar_mc = 3; // se selecciona identificador para mostrar la matriz MA
+	printk(KERN_INFO "matrixmod_info: Se asigna vector MI para mostrar en funcion read().\n");
+
+  }else if ( strcmp(kbuf,"mostrar MN\n") == 0){ // strcmp() return : 0 -> si son iguales 
+	
+	mostrar_mc = 4; // se selecciona identificador para mostrar la matriz MA
+	printk(KERN_INFO "matrixmod_info: Se asigna vector MN para mostrar en funcion read().\n");
+
+  }else if ( strcmp(kbuf,"mostrar d\n") == 0){ // strcmp() return : 0 -> si son iguales 
+	
+	mostrar_mc = 5; // se selecciona identificador para mostrar la matriz MA
+	printk(KERN_INFO "matrixmod_info: Se asigna vector disparo d para mostrar en funcion read().\n");
+
+  }else if ( strcmp(kbuf,"cargar MA\n") == 0){ // strcmp() return : 0 -> si son iguales 
+	
+	cargar_MA();
+	printk(KERN_INFO "matrixmod_info: Se realiza carga de MA.\n");
 
   }else
 	    printk(KERN_INFO "ERROR: comando no valido!!!\n");
@@ -356,6 +407,63 @@ void crear_mdisparos(int c, int mc_id)
 	else
 		printk(KERN_INFO "matrixmod_error: No se pudo crear Matriz con id: %d !!!\n", mc_id);
 	
+}
+
+/*
+* Descripcion: Esta funcion realiza el disparo sobre la RdP de acuerdo a un vector de disparo indicado
+* por parametro, verificando la sensibilidad de RdP para ese disparo, actualizando o no el marcado actual.
+* @param id_d: identificador de disparo a realizar sobre RdP.
+* @return -1: si no se puede realizar disparo sobre RdP (RdP no esta sensibilizada para ese disparo).
+* @return 1: si puedo realizar disparo sobre RdP (RdP estaba sensibilizada para ese disparo).
+*/
+int disparar(int id_d)
+{
+	/* Creo vector de disparo*/ 
+	//struct matriz vauxiliar;
+	vauxiliar.filas = disparos.filas;
+	vauxiliar.columnas =  1;
+
+	transpuesta_fc(&vauxiliar, &disparos, vauxiliar.filas, 1, id_d);
+	mc[5]=1;// se creo vector disparo
+
+	// Disparar
+	int i,j;
+	for (i = 0; i < I.columnas; i++)
+	{
+		/* code */
+		if(vauxiliar.matriz[i][0]==1)
+		{
+			for (j = 0; j < I.filas; j++)
+			{
+				/* code */
+				MN.matriz[0][j] = MI.matriz[0][j] + I.matriz[j][i]*vauxiliar.matriz[i][0];
+				if(MN.matriz[0][j]< 0)
+					return -1;
+			}
+		}
+	}
+
+	for (i = 0; i <I.filas ; i++)
+	{
+		/* code */
+		MA.matriz[0][i] = MN.matriz[0][i];
+	}
+
+	return 1;	
+}
+
+
+void cargar_MA(void)
+{
+	int i;
+  		if(mc[1]==1)/* Si MA existe*/
+  		{
+  			for (i = 0; i <I.filas ; i++)
+			{
+				/* code */
+				MA.matriz[0][i] = MI.matriz[0][i];
+			}
+  		}
 }
 
 void agregar_valor(char *entrada, char *vaux, char *faux, char *caux, struct matriz *m)
@@ -659,7 +767,7 @@ static ssize_t matrixmod_read(struct file *filp, char __user *buf, size_t len, l
   			nr_bytes=imprimir_matriz(&MA, buf, len);
     
   		else
-			printk(KERN_INFO "matrixmod_error: Matriz MA no existe.\n");
+			printk(KERN_INFO "matrixmod_error: Vector MA no existe.\n");
 		break;
 	case 2:
   		if(mc[2]==1)
@@ -667,6 +775,27 @@ static ssize_t matrixmod_read(struct file *filp, char __user *buf, size_t len, l
     
   		else
 			printk(KERN_INFO "matrixmod_error: Matriz mdisparos no existe.\n");
+		break;
+	case 3:
+  		if(mc[3]==1)
+  			nr_bytes=imprimir_matriz(&MI, buf, len);
+    
+  		else
+			printk(KERN_INFO "matrixmod_error: vector MI no existe.\n");
+		break;
+	case 4:
+  		if(mc[4]==1)
+  			nr_bytes=imprimir_matriz(&MN, buf, len);
+    
+  		else
+			printk(KERN_INFO "matrixmod_error: Vector MN no existe.\n");
+		break;
+	case 5:
+  		if(mc[5]==1)
+  			nr_bytes=imprimir_matriz(&vauxiliar, buf, len);
+    
+  		else
+			printk(KERN_INFO "matrixmod_error: Vector disparo d no existe.\n");
 		break;
 
   	//default:
@@ -742,9 +871,15 @@ void iniciar_matrices(void )
 	I.filas = I.columnas =0;
 	MA.filas = MA.columnas = 0;
 	disparos.filas = disparos.columnas = 0;
+	MI.filas = MI.columnas = 0;
+	MN.filas = MN.columnas = 0;
+
 	mc[0]=0; // matriz I no creada
 	mc[1]=0; // matriz MA no creada
 	mc[2]=0; // matriz de vectores de disparos no creada
+	mc[3]=0; // matriz MI no creada
+	mc[4]=0; // matriz MN no creada
+	mc[5]=0;// no se creo vector disparo
 	mostrar_mc = 0;
 }
 
@@ -782,6 +917,15 @@ void exit_modlist_module( void )
 
 	if(mc[2] == 1)
 		liberar_mem(&disparos);
+
+	if(mc[3] == 1)
+		liberar_mem(&MI);
+
+	if(mc[4] == 1)
+		liberar_mem(&MN);
+
+	if(mc[5] == 1)
+		liberar_mem(&vauxiliar);
 
   remove_proc_entry("matrixmod", NULL); // eliminar la entrada del /proc
   printk(KERN_INFO "matrixmod: Modulo descargado.\n");
