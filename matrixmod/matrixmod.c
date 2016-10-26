@@ -121,7 +121,8 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
   }else if( sscanf(kbuf,"add MI %s", entrada) == 1){
 		
 		agregar_valor(entrada, vaux, faux, caux, &MI);
-		cargar_MA(); // Se actualiza cada valor de MI(marcado inicial) en MA(maracado actual)
+		if(mc[1]) // Si MA existe
+			cargar_MA(); // Se actualiza cada valor de MI(marcado inicial) en MA(maracado actual)
 
   }else if ( strcmp(kbuf,"STEP_CMD\n") == 0){ // strcmp() return : 0 -> si son iguales 
 	
