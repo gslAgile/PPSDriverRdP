@@ -32,6 +32,7 @@ void crear_rdp(int *f, int *c, struct matriz *m, int pmc);
 void crear_mdisparos(int c, int mc_id);
 int disparar(int id_d);
 void cargar_MA(void);
+void tomar_transicion(char *entrada, int *transicion);
 
 
 static struct proc_dir_entry *proc_entry; // entrada de /proc
@@ -87,6 +88,7 @@ static int matrixmod_release(struct inode *inode, struct file *file)
 static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t len, loff_t *off) {
 
   int available_space = BUFFER_LENGTH-1; // espacio disponible
+  int transicion = 0; // transicion a disparar sobre RdP
   int f, c, v; // f: filas
 			   // c: columnas
 			   // v: valor a cargar en matriz
@@ -158,9 +160,10 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
 		if(mc[1]) // Si MA existe
 			cargar_MA(); // Se actualiza cada valor de MI(marcado inicial) en MA(maracado actual)
 
-  }else if ( strcmp(kbuf,"STEP_CMD\n") == 0){ // strcmp() return : 0 -> si son iguales 
+  }else if ( sscanf(kbuf,"STEP_CMD%s", entrada) == 1){
 	
-	if(disparar(0)== 1) // Si realizo disparo exitosamente
+	tomar_transicion(entrada, &transicion);
+	if(transicion > -1 && transicion < I.filas && disparar(transicion) == 1) // Si realizo disparo exitosamente
 		printk(KERN_INFO "matrixmod_info: El disparo fue exitoso!!!\n");
 	else
 		printk(KERN_INFO "matrixmod_info: El disparo no fue exitoso!!!\n");
@@ -496,6 +499,25 @@ void cargar_MA(void)
 			}
   		}
 }
+
+/*
+*/
+void tomar_transicion(char *entrada, int *transicion)
+{
+   	int t; // t: test funcion sscanf
+  	
+  	printk(KERN_INFO "INFO: entrada capturada para tomar nro de transicion: %s\n", entrada);
+
+  	t = sscanf(entrada,"_%d", *transicion);
+	if(t == 1)
+	{
+		printk(KERN_INFO "matrixmod_info: nro de transicion tomada: %d\n", *transicion);
+	}
+	else
+		printk(KERN_INFO "matrixmod_info: no se pudo tomar nro de transicion\n");
+}
+
+
 
 void agregar_valor(char *entrada, char *vaux, char *faux, char *caux, struct matriz *m)
 {
