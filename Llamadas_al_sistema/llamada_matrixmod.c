@@ -27,6 +27,7 @@ int main()
 
     while ( opcion != 6 )
     {
+        printf( "\n   >>>_			MENU 			_<<<\n");
         printf( "\n   1. Ver matriz de incidencia de la RdP.");
         printf( "\n   2. Ver marcado inicial de la RdP.");
         printf( "\n   3. Ver marcado actual de la RdP.");
@@ -60,6 +61,9 @@ int main()
             case 5: printf( "\n  Introduzca comando de disparo de transicion: ");
             		scanf( "%s", cadena);
                     disparar_trasnsicion(cadena);
+                    break;
+
+            default: printf("\n Comando no valido. Intente nuevamente segun opciones de menu.\n " );
          }
 
          /* Fin del anidamiento */
