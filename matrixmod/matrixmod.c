@@ -5,6 +5,7 @@
 #include <linux/list.h>
 #include "matrices.h"
 
+#define SUCCESS 0;
 
 /* Licencia del módulo */
 MODULE_LICENSE("GPL");
@@ -36,6 +37,8 @@ void cargar_MA(void);
 static struct proc_dir_entry *proc_entry; // entrada de /proc
 
 // Variables Globales
+static int Device_Open = 0; /* es un device open? */
+							/* Uso para prevenir multiples accesos en el dispositivo */
 struct matriz A; // Matriz A de prueba
 struct matriz I; // Matriz de incidencia
 struct matriz MA; // Vector de marcdo actual
@@ -49,6 +52,37 @@ int cd; // numero de vectores y elementos en vector disparo
 
 
 // Implementacion de Funciones
+/*
+* Llamada cuando  un proceso intentó abrir el archivo de dispositivo, como
+* "cat /dev/mycharfile".
+*/
+static int matrixmod_open(struct inode *inode, struct file *file)
+{
+    if (Device_Open > 10)
+        return -EBUSY;
+ 
+    Device_Open++;
+ 
+    try_module_get(THIS_MODULE);
+    return SUCCESS;
+}
+
+/*
+* Se llama cuando un proceso cierra el archivo de dispositivo.
+*/
+static int matrixmod_release(struct inode *inode, struct file *file)
+{
+    Device_Open--;
+    /* No estamos listos para nuestro siguiente llamada*/
+    /*
+    * Decrementar el contador de uso, o de lo contrario una vez que ha
+    * abierto el archivo, usted nunca se deshacera del módulo.
+    */
+    module_put(THIS_MODULE);
+    return SUCCESS;
+}
+
+
 
 static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t len, loff_t *off) {
 
@@ -804,6 +838,8 @@ static ssize_t matrixmod_read(struct file *filp, char __user *buf, size_t len, l
 }
 
 static const struct file_operations proc_entry_fops = {
+    .open = matrixmod_open,
+    .release = matrixmod_release,
     .read = matrixmod_read,
     .write = matrixmod_write,    
 };
