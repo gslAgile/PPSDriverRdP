@@ -163,8 +163,15 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
   }else if ( sscanf(kbuf,"STEP_CMD%s", entrada) == 1){
 	
 	tomar_transicion(entrada, &transicion);
-	if(transicion > -1 && transicion < I.filas && disparar(transicion) == 1) // Si realizo disparo exitosamente
-		printk(KERN_INFO "matrixmod_info: El disparo fue exitoso!!!\n");
+	if(transicion > -1 && transicion < I.filas) // Si realizo disparo exitosamente
+	{
+		if(disparar(transicion) == 1)
+			printk(KERN_INFO "matrixmod_info: El disparo fue exitoso!!!\n");
+
+		else
+		printk(KERN_INFO "matrixmod_info: El disparo no fue exitoso!!!\n");
+	}
+
 	else
 		printk(KERN_INFO "matrixmod_info: El disparo no fue exitoso!!!\n");
 
@@ -508,7 +515,7 @@ void tomar_transicion(char *entrada, int *transicion)
   	
   	printk(KERN_INFO "INFO: entrada capturada para tomar nro de transicion: %s\n", entrada);
 
-  	t = sscanf(entrada,"_%d", *transicion);
+  	t = sscanf(entrada,"_%d", transicion);
 	if(t == 1)
 	{
 		printk(KERN_INFO "matrixmod_info: nro de transicion tomada: %d\n", *transicion);
