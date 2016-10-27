@@ -185,6 +185,35 @@ void mostrar_MN(char *cadena)
 void disparar_trasnsicion(char *cadena)
 {
 	//
-	printf("Cadena ingresada: %s\n\n", cadena);
+	char MN[256]; // cadena para almacenar marcado nuevo
+	char MA[256]; // cadena para almacenar marcado actual
+	char comando[256] = "STEP_CMD_"; // comando para realizar disparo
+
+	strcat(comando, cadena); // se agrega cadena(nro transicion) al final de comando
+
+	printf("Cadena ingresada: %s\n\n", comando);
+	// Write sobre driver -> se realiza disparo
+	driver_write(comando);
+
+	// indicamos a driver que muestre MN
+	driver_write("mostrar MN\n");
+
+	// almacenamos read en MN
+	driver_read(MN);
+
+	// indicamos a driver que muestre MA
+	driver_write("mostrar MA\n");
+
+	// almacenamos read en MA
+	driver_read(MA);
+
+	// Comparamos resultados para verificar si disparo fallo o no
+	if(strcmp(MA, MN) == 0)
+		printf("\n	-->	Disparo exitoso.\n");
+
+	else
+		printf("\n	-->	Disparo no exitoso.\n");
+
+
 	memset(cadena, '\0', 256);// se limpia cadena
 }
