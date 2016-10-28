@@ -16,7 +16,7 @@
 <p align="center">
  
 <img src="https://github.com/gslAgile/PPSDriverRdP/blob/master/matrixmod/imagenes/img_RdP_3.png" title="Red de Petri.">
-<div align="center">Perfiles.</div>
+<div align="center"></div>
  
 </p>
 
