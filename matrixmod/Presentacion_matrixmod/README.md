@@ -36,3 +36,11 @@
  * Consultas tesis/informe Emi Daniele
    - Como se pasan los parametros de las funciones que utiliza el driver?
    - Como vincula el driver cargado en el kernel con el programa de usuari realizado en C? Qe funciones (llamadas al sistema) utiliza?
+ 
+ ### Correcciones
+ * Correccion de uso de funciones open() y close() solo una vez en el programa c de usuario.
+   - Se modifico codigo de modulo matrixmod.c en parametro offset que no permitia mas de una lectura escritura creando una variable que cuente las lecturas.
+   - **Duda:** pq cuando realizamos un cat sobre modulo (read) se llama mas de una vez ?
+   - Se modifico progrma c de usuario llamada_matrixmod.c para hacer el uso correcto del modulo matrixmod.c.
+ 
+ * **Pendiente:** verificar la carga de matrices de archivos de usuario desde el programa de usuario C.
