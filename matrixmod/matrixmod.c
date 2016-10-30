@@ -50,6 +50,7 @@ int mc[10]; // mc: vector para detectar la creacion de las matrices en el modulo
 int mostrar_mc; // entero identificatorio de cual de las matrices creadas mostrara para funcion read
 struct matriz disparos;  // *matriz con cada uno de los vectores disparos
 int cd; // numero de vectores y elementos en vector disparo
+int count_read = 0; // contador de lecturas en modulo
 
 
 // Implementacion de Funciones
@@ -98,11 +99,11 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
   char vaux[15] = "valor ";
   char faux[15] = "fila ";
   char caux[15] = "columna ";
-  int error=0;
+  //int error=0;
 
 
-  if ((*off) > 0) /* La aplicación puede escribir en esta entrada una sola vez !! */
-    return 0;
+  /*if ((*off) > 0)  La aplicación puede escribir en esta entrada una sola vez !! 
+    return 0;*/
   
   f=c=0;
   if (len > available_space) {
@@ -253,6 +254,8 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
   memset(faux, '\0', 15); // limpiamos faux 
   memset(caux, '\0', 15); // limpiamos caux
   memset(vaux, '\0', 15); // limpiamos vaux
+
+  count_read = 0; // Reinicia el cpntador de lectura para que se puede leer ante la nueva escritura
 
   return len;
 }
@@ -805,12 +808,19 @@ void agregar_valor(char *entrada, char *vaux, char *faux, char *caux, struct mat
 static ssize_t matrixmod_read(struct file *filp, char __user *buf, size_t len, loff_t *off) {
   
   int nr_bytes;
+  count_read++;
   //nr_bytes=0;
 
   /* Decirle a la aplicación que ya no hay nada que leer  "Para no copiar basura si llamas otra vez" */
-  if ((*off) > 0){
+  /*if ((*off) > 0){
 	  printk(KERN_INFO "matrixmod: no hay nada que leer \n");
-      return 0;}
+      return 0;}*/
+  if((count_read % 2) == 0)
+  {
+  		printk(KERN_INFO "matrixmod: no hay nada que leer \n");
+  		count_read = 0;
+      	return 0;
+  }
 
   switch(mostrar_mc)
   {

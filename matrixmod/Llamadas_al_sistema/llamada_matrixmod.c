@@ -8,23 +8,35 @@
 #include <errno.h>
 
 /* Variables globales*/
-int fd; // file descriptor para escribir/leer el driver
+
 
 /* Funciones */
-void driver_write(char cadena[256]);
-void driver_read(char *cadena);
-void mostrar_I(char *cadena);
-void mostrar_MI(char *cadena);
-void mostrar_MA(char *cadena);
-void mostrar_MN(char *cadena);
-void disparar_trasnsicion(char * cadena);
+void driver_write(char cadena[256], int pfd);
+void driver_read(char *cadena, int pfd);
+void mostrar_I(char *cadena, int pfd);
+void mostrar_MI(char *cadena, int pfd);
+void mostrar_MA(char *cadena, int pfd);
+void mostrar_MN(char *cadena, int pfd);
+void disparar_trasnsicion(char * cadena, int pfd);
 
 
 int main()
 {
+	int fd; // file descriptor para escribir/leer el driver
 	char cadena[256];
 	int n, opcion;
 
+	/* Abrimos modulo matrixmod*/
+	fd = open("/proc/matrixmod", O_RDWR); // abrimos file descriptor en modo escritura/lectura
+
+	if(fd<0 ) /* Verificacion de creacion*/
+	{
+		//error
+		perror("Error al abrir file descriptor.");
+		exit(1);
+	}
+
+	/* --- MENU DE OPCIONES ---	*/
     while ( opcion != 6 )
     {
         printf( "\n   >>>_			MENU 			_<<<\n");
@@ -42,101 +54,87 @@ int main()
 
         switch ( opcion )
         {
-            case 1: printf( "\n  Matriz de incidencia de la RdP:\n " );
-                    mostrar_I(cadena);
+            case 1: printf( "\n   Matriz de incidencia de la RdP:\n " );
+                    mostrar_I(cadena, fd);
                     break;
 
-            case 2: printf( "\n  Marcado inicial de la RdP:\n" );
-                    mostrar_MI(cadena);
+            case 2: printf( "\n   Marcado inicial de la RdP:\n" );
+                    mostrar_MI(cadena, fd);
                     break;
 
-            case 3: printf( "\n  Marcado actual de la RdP:\n " );
-                    mostrar_MA(cadena);
+            case 3: printf( "\n   Marcado actual de la RdP:\n " );
+                    mostrar_MA(cadena, fd);
                     break;
 
-            case 4: printf( "\n  Marcado nuevo de la RdP:\n " );
-                    mostrar_MN(cadena);
+            case 4: printf( "\n   Marcado nuevo de la RdP:\n " );
+                    mostrar_MN(cadena, fd);
                     break;
 
-            case 5: printf( "\n  Introduzca comando de disparo de transicion: ");
+            case 5: printf( "\n   Introduzca comando de disparo de transicion: ");
             		scanf( "%s", cadena);
-                    disparar_trasnsicion(cadena);
+                    disparar_trasnsicion(cadena, fd);
                     break;
 
-            default: printf("\n Comando no valido. Intente nuevamente segun opciones de menu.\n " );
+            case 6: printf( "\n   Saliendo de aplicacion.\n\n");
+            		break;
+
+            default: printf("\n   Comando no valido. Intente nuevamente segun opciones de menu.\n " );
          }
 
          /* Fin del anidamiento */
 
     }
 
+    // Close de files descriptors asociado a modulo
+	close(fd);
+
     return 0;
 }
 
-
-void driver_write(char cadena[256])
-{
-	/* Abrimos modulo matrixmod*/
-	fd = open("/proc/matrixmod", O_RDWR); // abrimos file descriptor en modo escritura/lectura
-
-	if(fd<0 ) /* Verificacion de creacion*/
-	{
-		//error
-		perror("Error al abrir file descriptor.");
-		exit(1);
-	}
-	
+/*
+* @param pfd: identificador file descriptor como parametro
+*/
+void driver_write(char cadena[256], int pfd)
+{	
 	// Write fichero
-	if (write(fd, cadena, strlen(cadena)) != strlen(cadena))
+	if (write(pfd, cadena, strlen(cadena)) != strlen(cadena))
 	{
 		printf("Error de escritura sobre driver\n");
 		// Close de files descriptors
-		close(fd);
+		close(pfd);
 		exit(1);
 	}
 
 	//printf("Escritura exitosa sobre driver\n");
-
-	// Close de files descriptors
-	close(fd);
 }
 
-
-void driver_read(char *cadena)
+/*
+* @param pfd: identificador file descriptor como parametro
+*/
+void driver_read(char *cadena, int pfd)
 {
-	/* Abrimos modulo matrixmod*/
-	fd = open("/proc/matrixmod", O_RDWR); // abrimos file descriptor en modo escritura/lectura
-
-	if(fd<0 ) /* Verificacion de creacion*/
-	{
-		//error
-		perror("Error al abrir file descriptor.");
-		exit(1);
-	}
-
 	// Read fichero
-	if(read(fd, cadena, 256) < 1)
+	if(read(pfd, cadena, 256) < 1)
 	{
 		printf("Error de lectura sobre driver\n");
 		// Close de files descriptors
-		close(fd);
+		close(pfd);
 		exit(1);
 	}
 
 	//printf("Lectura exitosa sobre driver\n");
-
-	// Close de files descriptors
-	close(fd);
 }
 
-
-void mostrar_I(char *cadena)
+/*
+* @param pfd: identificador file descriptor como parametro
+*/
+void mostrar_I(char *cadena, int pfd)
 {
 	// Write sobre driver
-	driver_write("mostrar I\n");
+	driver_write("mostrar I\n", pfd);
 
 	// Read fichero
-	driver_read(cadena);
+	driver_read(cadena, pfd);
 
 	printf("\n%s\n", cadena);
 
@@ -144,13 +142,13 @@ void mostrar_I(char *cadena)
 }
 
 
-void mostrar_MI(char *cadena)
+void mostrar_MI(char *cadena, int pfd)
 {
 	// Write sobre driver
-	driver_write("mostrar MI\n");
+	driver_write("mostrar MI\n", pfd);
 
 	// Read fichero
-	driver_read(cadena);
+	driver_read(cadena, pfd);
 
 	printf("\n%s\n", cadena);
 
@@ -158,13 +156,13 @@ void mostrar_MI(char *cadena)
 }
 
 
-void mostrar_MA(char *cadena)
+void mostrar_MA(char *cadena, int pfd)
 {
 	// Write sobre driver
-	driver_write("mostrar MA\n");
+	driver_write("mostrar MA\n", pfd);
 
 	// Read fichero
-	driver_read(cadena);
+	driver_read(cadena, pfd);
 
 	printf("\n%s\n", cadena);
 
@@ -172,13 +170,13 @@ void mostrar_MA(char *cadena)
 }
 
 
-void mostrar_MN(char *cadena)
+void mostrar_MN(char *cadena, int pfd)
 {
 	// Write sobre driver
-	driver_write("mostrar MN\n");
+	driver_write("mostrar MN\n", pfd);
 
 	// Read fichero
-	driver_read(cadena);
+	driver_read(cadena, pfd);
 
 	printf("\n%s\n", cadena);
 
@@ -186,7 +184,7 @@ void mostrar_MN(char *cadena)
 }
 
 
-void disparar_trasnsicion(char *cadena)
+void disparar_trasnsicion(char *cadena, int pfd)
 {
 	//
 	char MN[256]; // cadena para almacenar marcado nuevo
@@ -197,19 +195,19 @@ void disparar_trasnsicion(char *cadena)
 
 	printf("Cadena ingresada: %s\n\n", comando);
 	// Write sobre driver -> se realiza disparo
-	driver_write(comando);
+	driver_write(comando, pfd);
 
 	// indicamos a driver que muestre MN
-	driver_write("mostrar MN\n");
+	driver_write("mostrar MN\n", pfd);
 
 	// almacenamos read en MN
-	driver_read(MN);
+	driver_read(MN, pfd);
 
 	// indicamos a driver que muestre MA
-	driver_write("mostrar MA\n");
+	driver_write("mostrar MA\n", pfd);
 
 	// almacenamos read en MA
-	driver_read(MA);
+	driver_read(MA, pfd);
 
 	// Comparamos resultados para verificar si disparo fallo o no
 	if(strcmp(MA, MN) == 0)
