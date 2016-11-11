@@ -28,7 +28,7 @@ void disparar_trasnsicion(char * cadena, int pfd);
 //void cargar_vector(int *x, char *fname);
 //void reservar_mem(matriz *x, int filas, int columnas);
 void matrixmod_crear(char pcomando[256], int f, int c, int pfd);
-void matrixmod_add(void);
+void matrixmod_add(char pcomando[256], struct matriz *x, int pfd);
 
 
 int main()
@@ -39,18 +39,18 @@ int main()
 	int n, opcion;
 
 	// Variables matrices dinamicas
-	struct matriz MI;// Matriz de incidencia
-	struct matriz MA;// Marcado inicial actual
+	struct matriz I;// Matriz de incidencia
+	struct matriz MI;// Marcado inicial actual
 	struct matriz MN;// Marcado nuevo
 	char fname1[256];
 	char fname2[256];
 	
 	//leer_fc_MI( &filas, &columnas);
 
-	cargar_matriz(&MI, "MI.txt");
-	cargar_matriz(&MA, "MA.txt");
+	cargar_matriz(&I, "MI.txt");
+	cargar_matriz(&MI, "MA.txt");
 
-	printf("   --> La matriz leida es de dimension [%u]x[%u]", MI.filas, MI.columnas);
+	printf("   --> La matriz leida es de dimension [%u]x[%u]", I.filas, I.columnas);
 
 	
 	/* Abrimos modulo matrixmod*/
@@ -67,12 +67,14 @@ int main()
 	printf("\n\n");
 
 	// Creamos RdP I en matrixmod
-	matrixmod_crear("crear I ",MI.filas,MI.columnas,fd);
+	matrixmod_crear("crear I ",I.filas,I.columnas,fd);
+	matrixmod_add("add I ", &I, fd);
 
 	sleep(2); // esperamos 2 segundos para evitar problemas de concurrencia en el kernel
 	
 	// Creamos RdP MI en matrixmod
-	matrixmod_crear("crear MI ",MA.filas,MA.columnas,fd);
+	matrixmod_crear("crear MI ",MI.filas,MI.columnas,fd);
+	matrixmod_add("add MI ", &MI, fd);
 
 	// Cargamos los valores de las matrices al modulo matrixmod
 
@@ -128,8 +130,8 @@ int main()
 
     // Close de files descriptors asociado a modulo
 	close(fd);
+	liberar_mem(&I);
 	liberar_mem(&MI);
-	liberar_mem(&MA);
 
     return 0;
 }
@@ -440,7 +442,36 @@ void matrixmod_crear(char pcomando[256], int f, int c, int pfd)
 * Parametros:
 */
 
-void matrixmod_add(void)
+void matrixmod_add(char pcomando[256], struct matriz *x, int pfd)
 {
+	int i,j;
+	char comando[256];
+	memset(comando, '\0', 256);// se limpia cadena
+
+	// Se copia parametro a cadena comando
+	strcpy(comando, pcomando);
+	char valor_aux[256];
+	memset(valor_aux, '\0', 256);// se limpia cadena
 	
+	for(i = 0; i < x->filas; i++)
+	{
+		for (j = 0; j < x->columnas; j++)
+		{
+			// Se carga en cadena numeros los numeros enteros correspondientes a las filas y columnas
+			sprintf(valor_aux, "%d_%d_%d", i, j, x->matriz[i][j]);
+
+			// Se almacena todo en el comando para dejarlo completo
+			strcat(comando, valor_aux);
+
+			printf("Se ejecuta en modulo comando: %s\n", comando);
+			// Se crea matriz en modulo con comando write
+			driver_write(comando, pfd);
+
+			memset(comando, '\0', 256);// se limpia cadena
+
+			// Se copia parametro a cadena comando
+			strcpy(comando, pcomando);
+			memset(valor_aux, '\0', 256);// se limpia cadena
+		}
+	}
 }
