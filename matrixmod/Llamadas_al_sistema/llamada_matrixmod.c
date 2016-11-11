@@ -7,6 +7,11 @@
 #include <sys/stat.h>
 #include <errno.h>
 
+/* Librerias propias*/
+#include "matrices.h"
+
+#define TAM (1024*10 -1)
+
 /* Variables globales*/
 
 
@@ -18,11 +23,12 @@ void mostrar_MI(char *cadena, int pfd);
 void mostrar_MA(char *cadena, int pfd);
 void mostrar_MN(char *cadena, int pfd);
 void disparar_trasnsicion(char * cadena, int pfd);
-void leer_fc_MI(int *f, int *c);
-void cargar_matriz(int **x, char *fname);
-void cargar_vector(int *x, char *fname)
-void reservar_men(int **MI, int *MA, int *MN);
-void add_mod();
+//void leer_fc_MI(int *f, int *c);
+//void cargar_matriz(int **x, char *fname);
+//void cargar_vector(int *x, char *fname);
+//void reservar_mem(matriz *x, int filas, int columnas);
+void matrixmod_crear(char pcomando[256], int f, int c, int pfd);
+void matrixmod_add(void);
 
 
 int main()
@@ -33,38 +39,20 @@ int main()
 	int n, opcion;
 
 	// Variables matrices dinamicas
-	int filas=0;
-	int columnas =0;	
-	int **MI; // Matriz de incidencia
-	int *MA;  // Marcado inicial actual
-	int *MN;  // Marcado nuevo
+	struct matriz MI;// Matriz de incidencia
+	struct matriz MA;// Marcado inicial actual
+	struct matriz MN;// Marcado nuevo
 	char fname1[256];
 	char fname2[256];
 	
-	leer_fc_MI( &filas, &columnas);
-	
-	printf("   --> La matriz leida es de dimension [%u]x[%u]", filas, columnas);
+	//leer_fc_MI( &filas, &columnas);
 
-	int i;	 // Recorre filas
-	int j;	 // Recorre columnas
+	cargar_matriz(&MI, "MI.txt");
+	cargar_matriz(&MA, "MA.txt");
 
-	// Reservar memoria dinamicamente (en base a las filas y coloumnas leidas en file)
-	reservar_mem(MI, MA, MN);
-
-	// cargar matrices desde file
-	memset(fname1, '\0', 256);// se limpia cadena
-	strcpy(fname1, "MI.txt");
-	cargar_matriz(MI, fname1);
-
-	memset(fname2, '\0', 256);// se limpia cadena
-	strcpy(fname2, "MA.txt");
-	cargar_vector(MA, fname2);
-
-	// Cargamos los valores de las matrices al modulo matrixmod
-
+	printf("   --> La matriz leida es de dimension [%u]x[%u]", MI.filas, MI.columnas);
 
 	
-
 	/* Abrimos modulo matrixmod*/
 	fd = open("/proc/matrixmod", O_RDWR); // abrimos file descriptor en modo escritura/lectura
 
@@ -74,6 +62,20 @@ int main()
 		perror("Error al abrir file descriptor.");
 		exit(1);
 	}
+
+	// Creacion de matrices en modulo
+	printf("\n\n");
+
+	// Creamos RdP I en matrixmod
+	matrixmod_crear("crear I ",MI.filas,MI.columnas,fd);
+
+	sleep(2); // esperamos 2 segundos para evitar problemas de concurrencia en el kernel
+	
+	// Creamos RdP MI en matrixmod
+	matrixmod_crear("crear MI ",MA.filas,MA.columnas,fd);
+
+	// Cargamos los valores de las matrices al modulo matrixmod
+
 
 	/* --- MENU DE OPCIONES ---	*/
     while ( opcion != 6 )
@@ -126,6 +128,8 @@ int main()
 
     // Close de files descriptors asociado a modulo
 	close(fd);
+	liberar_mem(&MI);
+	liberar_mem(&MA);
 
     return 0;
 }
@@ -260,44 +264,44 @@ void disparar_trasnsicion(char *cadena, int pfd)
 }
 
 /*
-* Descripcion de funcion: 
+* Descripcion de funcion: lee cantidad de filas y columnas de matriz de incidencia.
 * Parametros:
-* @param **x: Doble puntero de matriz de incidencia.
+* @param f: Filas de matriz
+* @param c: Columnas de matriz
 */
 
-void cargar_MI(int **x)
+/*void leer_fc_MI(int *f, int *c)
 {
 	FILE *fp;
     char buffer[TAM]; // Arreglo que almacenara los datos del archivo leido (fn)
 	char fname[15]="MI.txt";
 	int filas=0; //
-	int columnas =0; //
+	int columnas = 0; //
 	char *aux;
 
     	
     	fp= fopen(fname,"r");// se abre archivo de nombre fname
     	if( !fp ){
 	      	printf( "Error al intetar abrir %s \n", fname);
-		}
+	}
 	
-	/*Leer linea por linea del contenido del archivo(fn) en el buffer */
+   	printf( "\n   --> Leyendo filas y columnas de matriz de incidencia (%s)...\n", fname);
+	
+	/* Leer linea por linea del contenido del archivo(fn) en el buffer
    	while (fgets(buffer, TAM, fp) != NULL)
-   	{
-		aux = strtok(buffer, " "); // guardamos primera linea
-		x[filas][columnas]=atoi(aux);
-		columnas =1;
-		
-		while( (aux = strtok( NULL, " ")) != NULL ){   // Posteriores llamadas
-			x[filas][columnas]=atoi(aux);
-			columnas++;
-		}
-   		columnas=0;
 		filas++;
-   	}
-   	fclose(fp);// cierra archivo
+
+   	fclose(fp);// cierra archivo	
 	
-   	printf( "\n   --> Se cargo exitosamente la matriz de incidencia desde (%s).\n", fname);
-}
+	aux = strtok(buffer, " "); // guardamos primera linea
+	columnas =1;
+
+	while( (aux = strtok( NULL, " ")) != NULL ) // Posteriores llamadas
+	 columnas++;
+	
+	*f = filas;
+	*c= columnas;
+}*/
 
 
 /*
@@ -306,7 +310,7 @@ void cargar_MI(int **x)
 * @param **x: Doble puntero de matriz de incidencia.
 */
 
-void cargar_matriz(int **x, char *fname)
+void cargar_matriz2(int **x, char *fname)
 {
 	FILE *fp;
     char buffer[TAM]; // Arreglo que almacenara los datos del archivo leido (fn)
@@ -347,7 +351,7 @@ void cargar_matriz(int **x, char *fname)
 * @param **x: Doble puntero de matriz de incidencia.
 */
 
-void cargar_vector(int *x, char *fname)
+/*void cargar_vector(int *x, char *fname)
 {
 	FILE *fp;
     char buffer[TAM]; // Arreglo que almacenara los datos del archivo leido (fn)
@@ -356,12 +360,12 @@ void cargar_vector(int *x, char *fname)
 	char *aux;
 
     	
-    	fp= fopen(fname,"r");// se abre archivo de nombre fname
-    	if( !fp ){
-	      	printf( "Error al intetar abrir %s \n", fname);
-		}
+    fp= fopen(fname,"r");// se abre archivo de nombre fname
+    if( !fp ){
+	   	printf( "Error al intetar abrir %s \n", fname);
+	}
 	
-	/*Leer linea por linea del contenido del archivo(fn) en el buffer */
+	/*Leer linea por linea del contenido del archivo(fn) en el buffer
    	if(fgets(buffer, TAM, fp) != NULL)
    	{
 		aux = strtok(buffer, " "); // guardamos primera linea
@@ -377,7 +381,7 @@ void cargar_vector(int *x, char *fname)
    	fclose(fp);// cierra archivo
 	
 //   	printf( "\n   --> Se cargo exitosamente la matriz de incidencia desde (%s).\n", fname);
-}
+}/*
 
 
 /*
@@ -385,24 +389,50 @@ void cargar_vector(int *x, char *fname)
 * Parametros:
 */
 
-reservar_men(int **MI, int *MA, int *MN)
+/*void reservar_mem(matriz *x, int filas, int columnas)
 {
-	// MATRIZ DE INCIDENCIA
-	// Reserva de Memoria para filas MI
-	MI = (int **)malloc(filas*sizeof(int*));
+	int i;	 // Recorre filas
+	int j;	 // Recorre columnas
+	x->filas = filas;
+	x->columnas = columnas;
+
+	// Reserva de Memoria para filas x
+	x->matriz = (int **)malloc(filas*sizeof(int*));
 	
-	// Reserva de memoria para columnas de MI
+	// Reserva de memoria para columnas de x
 	for (i=0;i<filas;i++) 
-		MI[i] = (int*)malloc(columnas*sizeof(int)); 
+		x->matriz[i] = (int*)malloc(columnas*sizeof(int)); 
+}*/
+
+/*
+* Descripcion de funcion: 
+* Parametros:
+* pfd: parametro de numero de file descriptor de modulo matrixmod
+* pcomando : cadena que indica comando
+* int f: entero que indica filas de matriz a crear
+* int c: entero que indica columnas de matriz a crear
+*/
+
+void matrixmod_crear(char pcomando[256], int f, int c, int pfd)
+{
+	char comando[256];
+	memset(comando, '\0', 256);// se limpia cadena
+
+	// Se copia parametro a cadena comando
+	strcpy(comando, pcomando);
+	char numeros[256];
+	memset(numeros, '\0', 256);// se limpia cadena
 	
+	// Se carga en cadena numeros los numeros enteros correspondientes a las filas y columnas
+	sprintf(numeros, "_%d_%d", f, c);
 
-	// MARCADO INICIAL
-	// Reserva de memoria para MA
-	MA = (int *)malloc(filas*sizeof(int));
+	// Se almacena todo en el comando para dejarlo completo
+	strcat(comando, numeros);
 
-	// MARCADO NUEVO
-	// Reserva de memoria para MN
-	MN = (int *)malloc(filas*sizeof(int));
+	printf("Se ejecuta en modulo comando: %s\n", comando);
+
+	// Se crea matriz en modulo con comando write
+	driver_write(comando, pfd);
 }
 
 /*
@@ -410,7 +440,7 @@ reservar_men(int **MI, int *MA, int *MN)
 * Parametros:
 */
 
-void add_mod()
+void matrixmod_add(void)
 {
 	
 }
