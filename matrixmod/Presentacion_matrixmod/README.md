@@ -20,7 +20,7 @@
  
 </p>
 
- * Modulo matrixmod.c carga cualquier RdP desde archivos de usuario en el kernel de Linux (no importa dimension de matriz).
+ * Modulo matrixmod.c carga cualquier RdP desde archivos de usuario en el kernel de Linux (no importa dimension de matriz), usando scripts bash .sh.
  
  * Se genera en base a la RdP matriz de disparos posibles a realizar sobre la misma.
  
@@ -42,5 +42,6 @@
    - Se modifico codigo de modulo matrixmod.c en parametro offset que no permitia mas de una lectura escritura creando una variable que cuente las lecturas.
    - **Duda:** pq cuando realizamos un cat sobre modulo (read) se llama mas de una vez ?
    - Se modifico progrma c de usuario llamada_matrixmod.c para hacer el uso correcto del modulo matrixmod.c.
- 
- * **Pendiente:** verificar la carga de matrices de archivos de usuario desde el programa de usuario C.
+   - Carga de RdP a modulo matrixmod en kernel se realiza todo desde programa C usuario, NO USAMOS MAS SCRIPTS BASH.
+   - Modulo matrixmod es totalmente controlable por programa C de usuario.
+   - **¿ Proximos pasos O_O ?**
