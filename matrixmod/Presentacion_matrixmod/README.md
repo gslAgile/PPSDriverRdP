@@ -44,4 +44,5 @@
    - Se modifico progrma c de usuario llamada_matrixmod.c para hacer el uso correcto del modulo matrixmod.c.
    - Carga de RdP a modulo matrixmod en kernel se realiza todo desde programa C usuario, NO USAMOS MAS SCRIPTS BASH.
    - Modulo matrixmod es totalmente controlable por programa C de usuario.
+   - **Duda:** Los comandos compatibles con los demas proyectos, se deben respetar en el programa C de usuario o tambien en el modulo matrixmod.c del kernel? (Adaptabilidad)
    - **¿ Proximos pasos O_O ?**
