@@ -64,15 +64,15 @@ int main()
 
 	// Creamos RdP I en matrixmod
 	matrixmod_crear("crear I ",I.filas,I.columnas,fd);
+	// Cargamos los valores de la RdP I al modulo matrixmod
 	matrixmod_add("add I ", &I, fd);
 
 	sleep(2); // esperamos 2 segundos para evitar problemas de concurrencia en el kernel
 	
 	// Creamos RdP MI en matrixmod
 	matrixmod_crear("crear MI ",MI.filas,MI.columnas,fd);
+	// Cargamos los valores de la RdP MI al modulo matrixmod
 	matrixmod_add("add MI ", &MI, fd);
-
-	// Cargamos los valores de las matrices al modulo matrixmod
 
 
 	/* --- MENU DE OPCIONES ---	*/
