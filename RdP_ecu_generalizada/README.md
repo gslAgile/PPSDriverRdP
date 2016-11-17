@@ -104,7 +104,7 @@ El vector **Ex** se obtiene de la conjuncion logica de todos los vectores anteri
 
 **Nueva ecuacion de estado: Mj+1 = Mj + I x (d & Ex)#A**
 
-**IMPORTACIA DE NUEVA ECUACION DE ESTADO: ** es que es de simple implementacion como circuito combinacional en una FPGA.
+**IMPORTACIA DE NUEVA ECUACION DE ESTADO:** es que es de simple implementacion como circuito combinacional en una FPGA.
 <p align="center">
  
 <img src="https://github.com/gslAgile/PPSDriverRdP/blob/master/RdP_ecu_generalizada/matrices_RdP_generalizada.png" title="Matrices de RdP generalizada">
