@@ -64,13 +64,15 @@ Los instantes de tiempo inicial y final [**alfa**i, **beta**i] en que base de ti
 * **Politica de seleccion de disparos**
 
 Responde la pregunta ¿De todas las transiciones sensibilizadas, cual debo disparar primero?
-**Selecion aleatoria** da como consecuencia un resultado de un **sistema no deteministico.**
-Pero buscamos **sistemas deterministicos** para lo cual utilizaremos prioridades, probabilidades, arcos (o brazos), etc.
+
+ - **Selecion aleatoria** da como consecuencia un resultado de un **sistema no deteministico.**
+
+ - Pero buscamos **sistemas deterministicos** para lo cual utilizaremos prioridades, probabilidades, arcos (o brazos), etc.
 
 * **Conclusion de caracteristicas de extencion**
 
   - Aumenta la capacidad de expresion de la RdP.
-  - Se rermiten modelar prioridas en las RdP.
+  - Se permiten modelar prioridas en las RdP.
   - Se permite comunicar la RdP con el medio haciendolas **RdP no autonomas.(?)**
 
 ## Ecuacion de estado extendida
