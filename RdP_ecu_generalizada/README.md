@@ -20,6 +20,8 @@ Solucion formal que que garantiza y facilita el desarrollo e implementacion de s
  
 </p>
 
+**Referencia resumen:** [enlace externo](http://sedici.unlp.edu.ar/bitstream/handle/10915/56579/Documento_completo.pdf-PDFA.pdf?sequence=1)
+
 Para ampliar la capacidad semántica de las redes se incluyen eventos, guardas, distintos tipos de brazos (inhibidores, lectores, etc.) y semánticas temporales. **Esto amplía el dominio de los problemas, el tamaño y la complejidad.**
 
 **La idea de RdP Generalizada: Es generalizar la ecuación de estado de la RdP, usando el concepto de inhibición de disparos, para obtener las distintas ampliaciones semánticas e implementarlas en un sistema combinacional.**
