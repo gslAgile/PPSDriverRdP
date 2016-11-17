@@ -29,7 +29,7 @@ Para ampliar la capacidad semántica de las redes se incluyen eventos, guardas, 
 
 El estado nuevo que determinado a partir del estado actual mas el producto de la matriz de incidencia con el vector disparo de la transicion que se desea disparar.
 
-* ** Disparo de una transicion y Transicion sensibilizada -> E[] = {0,1}**
+* **Disparo de una transicion y Transicion sensibilizada -> E[] = {0,1}**
 
 Para ejecutar de manera correcta el disparo la una transicion la **transicion debe estar sensibilizada.**
 Es el vector de transiciones sensibilizadas cuyo dominio es 0 y 1, donde 0 nos indica que la transicion no esta sensibilizada y un uno que si esta sensibilizada.
@@ -97,8 +97,17 @@ Se generan entonces los vectores de las condiciones utilizadas y que pueden ser
   - **Vector de transiciones des-sensibilizadas por tiempo Z = Tim(q, intervalos)**
   - **Vector de transiciones reset A**
 
+* **Vector de sensibilizado extendido Ex**
 
+El vector **Ex** se obtiene de la conjuncion logica de todos los vectores anteriores.
+**Ex = E & B & L & V & G & Z**
 
+**Nueva ecuacion de estado: Mj+1 = Mj + I x (d & Ex)#A**
 
-
-
+**IMPORTACIA DE NUEVA ECUACION DE ESTADO: ** es que es de simple implementacion como circuito combinacional en una FPGA.
+<p align="center">
+ 
+<img src="https://github.com/gslAgile/PPSDriverRdP/blob/master/RdP_ecu_generalizada/matrices_RdP_generalizada.png" title="Matrices de RdP generalizada">
+<div align="center"></div>
+ 
+</p>
