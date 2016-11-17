@@ -12,15 +12,17 @@
 
 
 <h1 align="center" >Resumen RdP Generalizada</h1>
+
+**Referencia resumen:** [enlace externo](http://sedici.unlp.edu.ar/bitstream/handle/10915/56579/Documento_completo.pdf-PDFA.pdf?sequence=1)
+
 Solucion formal que que garantiza y facilita el desarrollo e implementacion de sistemas informaticos que implementan hilos para explotar las arquitecturas multicore.
+
 <p align="center">
  
 <img src="https://github.com/gslAgile/PPSDriverRdP/blob/master/RdP_ecu_generalizada/RdP_extendida.png" title="Ejemplo RdP Generalizada">
 <div align="center"></div>
  
 </p>
-
-**Referencia resumen:** [enlace externo](http://sedici.unlp.edu.ar/bitstream/handle/10915/56579/Documento_completo.pdf-PDFA.pdf?sequence=1)
 
 Para ampliar la capacidad semántica de las redes se incluyen eventos, guardas, distintos tipos de brazos (inhibidores, lectores, etc.) y semánticas temporales. **Esto amplía el dominio de los problemas, el tamaño y la complejidad.**
 
