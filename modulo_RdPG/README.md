@@ -43,7 +43,7 @@
      - Logrando asi determinar cuales transiciones estan des-sensibilizadas y creando el **vector A**.
 * Se debera crear el **vector de sensibilizado extendido Ex** a partir de **Ex = E & B & L**
 * Entonces para disparar la **RdPG** se va utilizar todos los vectores anteriores con la nueva ecuacion de estado
-  - **Mj = Mj + I x ((d & Ex)#A)**
+  - **Mj+1 = Mj + I x ((d & Ex)#A)**
   
 ### **Lo nuevo en el programa de usuario de control del Driver RdP**
 * Adaptar el programa para disparar con la nueva funcion de disparo asociada a la RdPG.
