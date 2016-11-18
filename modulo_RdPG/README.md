@@ -11,7 +11,7 @@
   **Tema:** Desarrollo de modulos sobre el kernel de Linux
   
 
-<h1 align="center" >Nuevo Driver de RdP Generalizada</h1>
+<h1 align="center" >Diseño de nuevo Driver para RdP Generalizada</h1>
 <p align="center">
  
 <img src="https://github.com/gslAgile/PPSDriverRdP/blob/master/modulo_RdPG/intro2_RdPG.png" title="Intro RdP Generalizada">
