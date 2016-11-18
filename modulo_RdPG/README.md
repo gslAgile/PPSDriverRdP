@@ -34,8 +34,19 @@
   - Se debe crear el **vector L de transiciones des-sensibilizadas** (por arcor lector) a partir del **vector W** cuyos elementos **wi**
   son **wi =uno(M(pi))** -> 1 si M(pi)>0 : 0 en el resto de los casos... logrando asi determinar cuales transiciones estan
   des-sensibilizadas y creando el **vector L**.
-* Se permita el ingreso de comando en los write del driver para comando para cargar la **Matriz de brazos reset R**.
-
+* Como A = marca(Re x Mj). Entonces se debe
+  - Permitir el ingreso de un comando en los write del driver para cargar la **Matriz de brazos reset R -> Re**.
+  - Se debe crear el **vector A de transiciones des-sensibilizadas** (por arcor reset) a partir de las marcas **Mj**.
+  - Cada valor de A va ser 
+     - 0 si (Re x Mj)>0 (hay brazo reset, se resetea valor de la marca)
+     - es => 1 si (Re x Mj) = 0 (no hay brazo reset, se mantiene valor de la marca) 
+     - Logrando asi determinar cuales transiciones estan des-sensibilizadas y creando el **vector A**.
+* Se debera crear el **vector de sensibilizado extendido Ex** a partir de **Ex = E & B & L**
+* Entonces para disparar la **RdPG** se va utilizar todos los vectores anteriores con la nueva ecuacion de estado
+  - **Mj = Mj + I x ((d & Ex)#A)**
+  
 ### **Lo nuevo en el programa de usuario de control del Driver RdP**
-*
-*
+* Adaptar el programa para disparar con la nueva funcion de disparo asociada a la RdPG.
+* Permitir en el menu de opciones
+   - La visualizacion de todas las matrices de incidencia (arcos inhibidor, lector, reset).
+   - La visualizacion de los vectores de sensibilizado y des-sensibilizado (E, B, L, etc) como tambien el vector de sensibilizado extendido.
