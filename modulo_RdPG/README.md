@@ -10,6 +10,8 @@
   
   **Tema:** Desarrollo de modulos sobre el kernel de Linux
   
+  **Referencia:** [enlace externo](http://sedici.unlp.edu.ar/bitstream/handle/10915/56579/Documento_completo.pdf-PDFA.pdf?sequence=1)
+  
 
 <h1 align="center" >Diseño de nuevo Driver para RdP Generalizada</h1>
 <p align="center">
