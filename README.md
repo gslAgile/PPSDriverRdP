@@ -39,10 +39,12 @@
 * [Informe 1](https://docs.google.com/document/d/1FPyeSiEfVnkB0pCu4qlRpiccHZzDRhBbd9qO8ZFv8m4/edit?usp=sharing)
 * [Informe 2](https://docs.google.com/document/d/1SsGJhQmugP3i8FpAjkSKZpyXo0TqFblclkbleaAMfyA/edit?usp=sharing)
 
-**Palabras clave**: Red de Petri no autónomas, Red de petri generalizada (RdPG - RDPG), Ecuación de estado, Ecuacion de estado generalizada, Procesador de Petri, IP-Core, Driver red de petri, Driver de petri, Driver RdP, Driver RdPG.
 
 **Casos de test:** asociados a los diferentes modulos del kernel de Linux.
 * [Casos de test](https://docs.google.com/spreadsheets/d/1KSpCpIVSr3l67MKMqqpquB5ZKdD6cYC1VT1fS6j0bbs/edit?usp=sharing)
+
+**Palabras clave**: Red de Petri no autónomas, Red de petri generalizada (RdPG - RDPG), Ecuación de estado, Ecuacion de estado generalizada, Procesador de Petri, IP-Core, Driver red de petri, Driver de petri, Driver RdP, Driver RdPG.
+
 
 
 
