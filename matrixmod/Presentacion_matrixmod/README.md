@@ -9,6 +9,9 @@
   **Integrantes:** Garcia Cannata Nicolas - Sosa Ludueña Gabriel
   
   **Tema:** Desarrollo de modulos sobre el kernel de Linux
+  
+  **Palabras clave**: Red de Petri no autónomas, Red de petri generalizada (RdPG - RDPG), Ecuación de estado, Ecuacion de estado generalizada, Procesador de Petri, IP-Core, Driver red de petri, Driver de petri, Driver RdP, Driver RdPG.
+
 
 
 <h1 align="center" >Presentacion - matrixmod.c</h1>
