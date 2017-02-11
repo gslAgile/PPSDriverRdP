@@ -34,7 +34,7 @@ Para ampliar la capacidad semántica de las redes se incluyen eventos, guardas, 
 ## Fundamentos y Notacion
 * **Ecuacion de estado:  Mj+1 = Mj + I*d**
 
-El estado nuevo que determinado a partir del estado actual mas el producto de la matriz de incidencia con el vector disparo de la transicion que se desea disparar.
+El estado nuevo de una RdP Ordinaria queda determinado a partir del estado actual mas el producto de la matriz de incidencia con el vector disparo de la transicion que se desea disparar.
 
 * **Disparo de una transicion y Transicion sensibilizada -> E[] = {0,1}**
 
@@ -46,7 +46,7 @@ Es el vector de transiciones sensibilizadas cuyo dominio es 0 y 1, donde 0 nos i
 
 * **Arcos (o brazos) inhibidores, lectores y reset**
 
-Nuevas conexiones que se dan entra cada par individual de plaza con transicion (pi, tj). 
+Nuevas conexiones que se dan entre cada par individual de plaza con transicion (pi, tj). 
 
 <p align="center">
  
