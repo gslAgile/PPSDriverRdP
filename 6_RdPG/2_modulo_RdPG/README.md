@@ -18,7 +18,7 @@
 <h1 align="center" >Diseño de nuevo Driver para RdP Generalizada</h1>
 <p align="center">
  
-<img src="https://github.com/gslAgile/PPSDriverRdP/blob/master/modulo_RdPG/intro2_RdPG.png" title="Intro RdP Generalizada">
+<img src="https://github.com/gslAgile/PPSDriverRdP/blob/master/6_RdPG/2_modulo_RdPG/intro2_RdPG.png" title="Intro RdP Generalizada">
 <div align="center"></div>
  
 </p>
