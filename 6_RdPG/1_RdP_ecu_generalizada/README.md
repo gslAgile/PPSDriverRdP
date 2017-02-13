@@ -22,7 +22,7 @@ Solucion formal que que garantiza y facilita el desarrollo e implementacion de s
 
 <p align="center">
  
-<img src="https://github.com/gslAgile/PPSDriverRdP/blob/master/RdP_ecu_generalizada/RdP_extendida.png" title="Ejemplo RdP Generalizada">
+<img src="https://github.com/gslAgile/PPSDriverRdP/blob/master/6_RdPG/1_RdP_ecu_generalizada/RdP_extendida.png" title="Ejemplo RdP Generalizada">
 <div align="center"></div>
  
 </p>
@@ -50,7 +50,7 @@ Nuevas conexiones que se dan entre cada par individual de plaza con transicion (
 
 <p align="center">
  
-<img src="https://github.com/gslAgile/PPSDriverRdP/blob/master/RdP_ecu_generalizada/Tipos_de_arcos.png" title="Tipos de arcos/brazos">
+<img src="https://github.com/gslAgile/PPSDriverRdP/blob/master/6_RdPG/1_RdP_ecu_generalizada/Tipos_de_arcos.png" title="Tipos de arcos/brazos">
 <div align="center"></div>
  
 </p>
@@ -116,7 +116,7 @@ El vector **Ex** se obtiene de la conjuncion logica de todos los vectores anteri
 **IMPORTACIA DE NUEVA ECUACION DE ESTADO:** es que es de simple implementacion como circuito combinacional en una FPGA.
 <p align="center">
  
-<img src="https://github.com/gslAgile/PPSDriverRdP/blob/master/RdP_ecu_generalizada/matrices_RdP_generalizada.png" title="Matrices de RdP generalizada">
+<img src="https://github.com/gslAgile/PPSDriverRdP/blob/master/6_RdPG/1_RdP_ecu_generalizada/matrices_RdP_generalizada.png" title="Matrices de RdP generalizada">
 <div align="center"></div>
  
 </p>
