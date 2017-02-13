@@ -10,18 +10,17 @@
 /* Licencia del módulo */
 MODULE_LICENSE("GPL");
 
-/*Autores*/
+/* Autores */
 MODULE_AUTHOR("Ing. Micolini Orlando, Garcia Cannata, Sosa Ludueña");
 
-/* Descripcion del modulo*/
+/* Descripcion del modulo */
 MODULE_DESCRIPTION("Implementa una Red de Petri en un módulo del kernel "\
 					"administrable por una entrada en /proc");
 
-
 #define BUFFER_LENGTH       2048
-#define COMMANDSIZE			256
+#define COMMANDSIZE	    256
 
-// Funciones:
+// Funciones
 int imprimir_matriz(struct matriz *m, char *buf, size_t len);
 void iniciar_matrices(void);
 void agregar_valor(char *entrada, char *vaux, char *faux, char *caux, struct matriz *m);
@@ -34,14 +33,14 @@ int disparar(int id_d);
 void cargar_MA(void);
 void tomar_transicion(char *entrada, int *transicion);
 
-
-static struct proc_dir_entry *proc_entry; // entrada de /proc
+static struct proc_dir_entry *proc_entry; // Entrada de /proc
 
 // Variables Globales
-static int Device_Open = 0; /* es un device open? */
-							/* Uso para prevenir multiples accesos en el dispositivo */
+static int Device_Open = 0; /* Es un device open? */
+			    /* Uso para prevenir multiples accesos en el dispositivo */
 struct matriz A; // Matriz A de prueba
 struct matriz I; // Matriz de incidencia
+struct matriz H; // Matriz de incidencia H asociada a los brazos inhibidores
 struct matriz MA; // Vector de marcdo actual
 struct matriz MI; // Vector de marcado inicial
 struct matriz MN; // Vector de marcado nuevo
@@ -52,7 +51,6 @@ struct matriz disparos;  // *matriz con cada uno de los vectores disparos
 int cd; // numero de vectores y elementos en vector disparo
 int count_read = 0; // contador de lecturas en modulo
 
-
 // Implementacion de Funciones
 /*
 * Llamada cuando  un proceso intentó abrir el archivo de dispositivo, como
@@ -60,13 +58,13 @@ int count_read = 0; // contador de lecturas en modulo
 */
 static int matrixmod_open(struct inode *inode, struct file *file)
 {
-    if (Device_Open > 10)
-        return -EBUSY;
+	if (Device_Open > 10)
+	        return -EBUSY;
  
-    Device_Open++;
+    	Device_Open++;
  
-    try_module_get(THIS_MODULE);
-    return SUCCESS;
+    	try_module_get(THIS_MODULE);
+    	return SUCCESS;
 }
 
 /*
@@ -74,25 +72,23 @@ static int matrixmod_open(struct inode *inode, struct file *file)
 */
 static int matrixmod_release(struct inode *inode, struct file *file)
 {
-    Device_Open--;
-    /* No estamos listos para nuestro siguiente llamada*/
-    /*
-    * Decrementar el contador de uso, o de lo contrario una vez que ha
-    * abierto el archivo, usted nunca se deshacera del módulo.
-    */
-    module_put(THIS_MODULE);
-    return SUCCESS;
+    	Device_Open--;
+    	/* No estamos listos para nuestro siguiente llamada */
+    	/*
+    	* Decrementar el contador de uso, o de lo contrario una vez que ha
+    	* abierto el archivo, usted nunca se deshacera del módulo.
+    	*/
+    	module_put(THIS_MODULE);
+    	return SUCCESS;
 }
-
-
 
 static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t len, loff_t *off) {
 
   int available_space = BUFFER_LENGTH-1; // espacio disponible
   int transicion = 0; // transicion a disparar sobre RdP
   int f, c, v; // f: filas
-			   // c: columnas
-			   // v: valor a cargar en matriz
+               // c: columnas
+	       // v: valor a cargar en matriz
   
   char kbuf[BUFFER_LENGTH];//
   char entrada[COMMANDSIZE];
@@ -100,10 +96,8 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
   char faux[15] = "fila ";
   char caux[15] = "columna ";
   //int error=0;
-
-
-  /*if ((*off) > 0)  La aplicación puede escribir en esta entrada una sola vez !! 
-    return 0;*/
+  /* if ((*off) > 0)  La aplicación puede escribir en esta entrada una sola vez !! 
+    return 0; */
   
   f=c=0;
   if (len > available_space) {
@@ -118,22 +112,22 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
   if (copy_from_user( kbuf, buf, len ))  
     return -EFAULT; // Direccion incorrecta
   
-  kbuf[len]='\0'; // añadimos el fin de la cadena al copiar los datos from user space.
+  kbuf[len]='\0'; // Añadimos el fin de la cadena al copiar los datos from user space.
   *off+=len;            /* Actualizar el puntero del archivo */
 
-  /*sscanf() return : el nº de elementos asignados*/
+  /* sscanf() return : el nº de elementos asignados */
   if( sscanf(kbuf,"add I %s", entrada) == 1){
 		
 		agregar_valor(entrada, vaux, faux, caux, &I);
 
   }else if( sscanf(kbuf,"crear I %s",entrada) == 1) {
 
-		/*Tomar valores de filas y columnas segun la entrada*/
+		/* Tomar valores de filas y columnas segun la entrada */
   		tomar_fc(&f, &c, entrada);
-  		/* Creamos matriz I segun entrada recibida*/
-		crear_rdp(&f, &c, &I, 0);/* 0: hace referencia a mc[0] para detectar que se creo
-  											       una matriz en referencia a esa posicion, en este caso I*/
-		if(mc[0])// si se creo exitosamente Matriz I
+  		/* Creamos matriz I segun entrada recibida */
+		crear_rdp(&f, &c, &I, 0); /* 0: hace referencia a mc[0] para detectar que se creo
+						una matriz en referencia a esa posicion, en este caso I */
+		if(mc[0]) // Si se creo exitosamente Matriz I
 		{ 
 			int ff, cc;
 
@@ -142,9 +136,9 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
 			cc = I.filas;
 
 			crear_rdp(&ff, &cc, &MA, 1); /* 1: hace referencia a mc[1] para detectar que se creo
-  											       una matriz en referencia a esa posicion, en este caso MA*/
+  							   una matriz en referencia a esa posicion, en este caso MA*/
 			crear_rdp(&ff, &cc, &MN, 4); /* 4: hace referencia a mc[4] para detectar que se creo
-  											       una matriz en referencia a esa posicion, en este caso MN*/
+  						           una matriz en referencia a esa posicion, en este caso MN*/
 		}
 	 
   }else if( sscanf(kbuf,"crear MI %s",entrada) == 1) {
@@ -154,6 +148,14 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
   		/* Creamos matriz MA segun entrada recibida*/
   		crear_rdp(&f, &c, &MI, 3); /* 3: hace referencia a mc[3] para detectar que se creo
   											       una matriz en referencia a esa posicion, en este caso MI*/
+  		
+  }else if( sscanf(kbuf,"crear H %s",entrada) == 1) {
+
+  		/*Tomar valores de filas y columnas segun la entrada*/
+  		tomar_fc(&f, &c, entrada);
+  		/* Creamos matriz MA segun entrada recibida*/
+  		crear_rdp(&f, &c, &H, 6); /* 6: hace referencia a mc[6] para detectar que se creo
+  											       una matriz en referencia a esa posicion, en este caso H*/
   		
   }else if( sscanf(kbuf,"add MI %s", entrada) == 1){
 		
@@ -192,6 +194,14 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
 	}
 	else
 		 printk(KERN_INFO "matrixmod: La matriz MA no existe!!!\n");
+  }else if ( strcmp(kbuf,"borrar H\n") == 0){ // strcmp() return : 0 -> si son iguales 
+    
+    if(mc[6] == 1){
+		liberar_mem(&H);
+		mc[6] = 0;
+	}
+	else
+		 printk(KERN_INFO "matrixmod: La matriz H no existe!!!\n");
   }else if ( strcmp(kbuf,"limpiar I\n") == 0){ // strcmp() return : 0 -> si son iguales 
 	
 	if(mc[0]==1){    
@@ -207,6 +217,14 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
 	}
 	else
 		printk(KERN_INFO "matrixmod: La matriz MA no existe!!!\n");
+
+  }else if ( strcmp(kbuf,"limpiar H\n") == 0){ // strcmp() return : 0 -> si son iguales 
+
+	if(mc[6]==1){    
+		limpiar_matriz(&H); // matriz H se limpia toda a cero
+	}
+	else
+		printk(KERN_INFO "matrixmod: La matriz H no existe!!!\n");
 
   }else if ( strcmp(kbuf,"mostrar I\n") == 0){ // strcmp() return : 0 -> si son iguales 
 	
@@ -238,6 +256,11 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
 	mostrar_mc = 5; // se selecciona identificador para mostrar la matriz MA
 	printk(KERN_INFO "matrixmod_info: Se asigna vector disparo d para mostrar en funcion read().\n");
 
+  }else if ( strcmp(kbuf,"mostrar H\n") == 0){ // strcmp() return : 0 -> si son iguales 
+	
+	mostrar_mc = 6; // se selecciona identificador para mostrar la matriz H
+	printk(KERN_INFO "matrixmod_info: Se asigna matriz H para mostrar en funcion read().\n");
+
   }else if ( strcmp(kbuf,"cargar MA\n") == 0){ // strcmp() return : 0 -> si son iguales 
 	
 	cargar_MA();
@@ -245,7 +268,7 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
 
   }else if ( strcmp(kbuf,"mostrar mc\n") == 0){ // strcmp() return : 0 -> si son iguales 
 	
-	printk(KERN_INFO "matrixmod_info: mc = [%d %d %d %d %d %d]\n", mc[0], mc[1], mc[2], mc[3], mc[4], mc[5]);
+	printk(KERN_INFO "matrixmod_info: mc = [%d %d %d %d %d %d]\n", mc[0], mc[1], mc[2], mc[3], mc[4], mc[5]]);
 
   }else
 	    printk(KERN_INFO "ERROR: comando no valido!!!\n");
@@ -260,15 +283,14 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
   return len;
 }
 
-
 /*
 * Descripcion: Esta funcion detecta la posicion de un caracter (pasado por paramentro)
-* sobre la cadena a la que apunte el puntero *p
-* @param c[2]: caracter a detectar
-* @param *p: puntero que apunta a la cadena donde se busca el espacio ("_")
+* sobre la cadena a la que apunte el puntero *p.
+* @param c[2]: caracter a detectar.
+* @param *p: puntero que apunta a la cadena donde se busca el espacio ("_").
 * @param *ccf: puntero que apunta a la direccion de un entero donde se almacena
 * la cantidad de avances hasta encontrar el espacio.
-* @return: retorna la direccion donde se encontro el espacio.
+* @return: retorna la direccion donde se encontro el espacio
 * sino se encontro se retorna la direccon inicial de *p.
 */
 int detectar_esp(char c[2], char *p, int *ccf)
@@ -276,20 +298,19 @@ int detectar_esp(char c[2], char *p, int *ccf)
 	int i, aux;
 	aux = (int)p; // Guardamos auxiliarmente la direccion que tiene p
 
-	p = p + 1; // avanzamos un lugar suponiendo que el primero no es "_"
+	p = p + 1; // Avanzamos un lugar suponiendo que el primero no es "_"
   	for (i = 0; i < COMMANDSIZE; i++)
   	{
   		if(strncmp(p,c, 1) == 0)
   			break;
-  		else
-  		{
+  		else {
   			p = p + 1;
   			*ccf = *ccf + 1;
   		}
   	}
 
-  	if(i == COMMANDSIZE){
-  		p = aux; // volvemos a asignar direccion de inicio ya que no se encontro ningun "_"
+  	if(i == COMMANDSIZE) {
+  		p = aux; // Volvemos a asignar direccion de inicio ya que no se encontro ningun "_"
   		printk("ERROR: No se encontro direccion de '_'\n");
   	}
 
@@ -298,12 +319,12 @@ int detectar_esp(char c[2], char *p, int *ccf)
 
 /*
 * Descripcion: Esta funcion detecta la posicion de un caracter (pasado por paramentro)
-* sobre la cadena a la que apunte el puntero *p
-* @param c[2]: caracter a detectar
+* sobre la cadena a la que apunte el puntero *p.
+* @param c[2]: caracter a detectar.
 * @param *p: puntero que apunta a la cadena donde se busca el espacio ("_")
 * la cantidad de avances hasta encontrar el espacio. Puedde mandar NULL si no
-* se nescesita
-* @return: retorna la direccion donde se encontro el espacio.
+* se nescesita.
+* @return: retorna la direccion donde se encontro el espacio
   sino se encontro se retorna la direccon inicial de *p.
 */
 int detectar_char(char c[2], char *p)
@@ -311,7 +332,7 @@ int detectar_char(char c[2], char *p)
 	int i, aux;
 	aux = (int)p; // Guardamos auxiliarmente la direccion que tiene p
 
-	/*Buscamos direccion de "_" avanzando para adelante*/
+	/* Buscamos direccion de "_" avanzando para adelante */
   	for (i = 0; i < COMMANDSIZE; i++)
   	{
   		if(strncmp(p,c, 1) == 0)
@@ -320,14 +341,13 @@ int detectar_char(char c[2], char *p)
   			p = p + 1;
   	}
 
-  	if(i == COMMANDSIZE){
-  		p = aux; // volvemos a asignar direccion de inicio ya que no se encontro ningun "_"
+  	if(i == COMMANDSIZE) {
+  		p = aux; // Volvemos a asignar direccion de inicio ya que no se encontro ningun "_"
   		printk("ERROR: No se encontro direccion de '_'\n");
   	}
 
   	return (int)p;
 }
-
 
 /*
 * Descripcion: toma las filas y columnas, como enteros, del parametro enviado por el usuario, en
@@ -338,70 +358,61 @@ int detectar_char(char c[2], char *p)
 */
 void tomar_fc(int *f, int *c, char *entrada)
 {
-	char *p0; // puntero destinado para que apunte a la direccion 0 de entrada.
-	char *s2; // puntero donde almacenaremos la direccion de un caracter
-   	char s1[10]; // cadena de char donde se almacenara la ultima porcion de la entrada que son columnas
+	char *p0; // Puntero destinado para que apunte a la direccion 0 de entrada
+	char *s2; // Puntero donde almacenaremos la direccion de un caracter
+   	char s1[10]; // Cadena de char donde se almacenara la ultima porcion de la entrada que son columnas
    	int ccf; // ccf: contador de cifras en filas
    	int t; // t: test funcion sscanf
   	
-  	ccf = 0; // inicializamos contador
+  	ccf = 0; // Inicializamos contador
   	printk(KERN_INFO "INFO: entrada capturada para MA: %s\n", entrada);
-  	p0 = entrada; // asignamos al puntero la direccion 0 de entrada
-  	p0 = detectar_char("_", p0); // se determina donde empiza el primer espacio dado por "_"
-  	p0 = detectar_esp("_", p0, &ccf); // avanzamos al proximo espacio para saltear las cifras de fila.
+  	p0 = entrada; // Asignamos al puntero la direccion 0 de entrada
+  	p0 = detectar_char("_", p0); // Se determina donde empiza el primer espacio dado por "_"
+  	p0 = detectar_esp("_", p0, &ccf); // Avanzamos al proximo espacio para saltear las cifras de fila.
 
-  	if(p0 == entrada)
-  	{
+  	if(p0 == entrada) {
   		printk("matrixmod_error: No se pudiron tomar los parametros de filas/columnas ingresados."\
   			   "Verifique el comando ingresado es correcto.");
-  		*f=*c=0; // se asigna cero a las filas y columnas para detectar error en creacion de matriz
-  	}
-
-  	else
-  	{
-  		s2 = entrada; // inicializamos direccion de s2
-		s2 = detectar_char("_", s2)+1; // detectamos el primer espacio "_" nuevamente.
+  		*f=*c=0; // Se asigna cero a las filas y columnas para detectar error en creacion de matriz
+  	} else {
+  		s2 = entrada; // Inicializamos direccion de s2
+		s2 = detectar_char("_", s2)+1; // Detectamos el primer espacio "_" nuevamente.
 		
-		/*Si filas es numero negativo*/ //--> analizar este if que no tiene sentido ya que sscanf toma numeros negativos
-  		if(entrada[(int)(s2)] == "-") // se castea direccion de s2 a (int) para usar la direccion como entero
-  			ccf = ccf -1;// descontamos una cifra de fila por caracter de signo negativo
+		/* Si filas es numero negativo */ //--> Analizar este if que no tiene sentido ya que sscanf toma numeros negativos
+  		if(entrada[(int)(s2)] == "-") // Se castea direccion de s2 a (int) para usar la direccion como entero
+  			ccf = ccf -1;// Descontamos una cifra de fila por caracter de signo negativo
 
-		strncpy(s1, s2, ccf); // copiamos n=ccf caracteres, donde apunta s2, en s1.
-		t = sscanf(s1,"%d", f); // guardamos valor copiado en s1 como entero en f.
-		if(t == 1)
-		{
+		strncpy(s1, s2, ccf); // Copiamos n=ccf caracteres, donde apunta s2, en s1.
+		t = sscanf(s1,"%d", f); // Guardamos valor copiado en s1 como entero en f.
+		if(t == 1) {
 			printk(KERN_INFO "INFO: captura de filas para MA: %d\n", *f);
-		}
-		else
+		} else
 			printk(KERN_INFO "INFO: Fallo captura de filas para MA\n");
   		
 		t = sscanf(p0,"_%d", c);
-		if(t == 1)
-		{
+		if(t == 1) {
 			printk(KERN_INFO "INFO: captura de columnas para MA: %d\n", *c);
-		}
-		else
+		} else
 			printk(KERN_INFO "INFO: Fallo captura de columnas para MA\n");
   		
 		printk(KERN_INFO "INFO: Valor ccf : %d para MA\n", ccf);
-		memset(s1, '\0', 10); // limpiamos s1
+		memset(s1, '\0', 10); // Limpiamos s1
 	}
 }
 
-
 /*
 * Descripcion: Esta funcion crea una matriz, verificando que los parametros de filas y columnas
-* tomados desde una entrada del usuario sean correctos.(entrada: es un comando ingresado por el usuario)
+* tomados desde una entrada del usuario sean correctos.(entrada: es un comando ingresado por el usuario).
 * @param *f: puntero a la direccion de la variable entera donde se almacena la cantidad de filas.
 * @param *c: puntero a la direccion de la variable entera donde se almacena la cantidad de columnas.
-* @param pmc: posicion de matriz a crear sobre el vector mc[]
+* @param pmc: posicion de matriz a crear sobre el vector mc[].
 */
 void crear_rdp(int *f, int *c, struct matriz *m, int pmc)
 {
-	/* Tomar valores de filas y columnas segun la entrada*/
+	/* Tomar valores de filas y columnas segun la entrada */
   	//tomar_fc(f, c, entrada);
 
-  	/* Verificamos filas y columnas*/
+  	/* Verificamos filas y columnas */
   	if(*f < 1 || *c < 1)
   	{
   		printk("matrixmod_error: Filas o columnas mal ingresada.\n");
@@ -425,7 +436,7 @@ void crear_rdp(int *f, int *c, struct matriz *m, int pmc)
    			}
 		}
 
-		/* Si matriz existe*/
+		/* Si matriz existe */
 		else if (mc[pmc] == 1)
 			printk(KERN_INFO "matrixmod_error: Matriz con id: %d ya creada!!!\n", pmc);
   	}
@@ -440,17 +451,16 @@ void crear_rdp(int *f, int *c, struct matriz *m, int pmc)
 */
 void crear_mdisparos(int c, int mc_id)
 {
-	cd = c; // se asigna a cd la cantidad de columnas
+	cd = c; // Se asigna a cd la cantidad de columnas
 	disparos.filas = cd;
 	disparos.columnas = cd;
 
 	identidad(&disparos, cd);
 
 	if(disparos.matriz != NULL)
-		mc[mc_id] = 1; // matriz de disparos creada con exito
+		mc[mc_id] = 1; // Matriz de disparos creada con exito
 	else
 		printk(KERN_INFO "matrixmod_error: No se pudo crear Matriz con id: %d !!!\n", mc_id);
-	
 }
 
 /*
@@ -462,13 +472,13 @@ void crear_mdisparos(int c, int mc_id)
 */
 int disparar(int id_d)
 {
-	/* Creo vector de disparo*/ 
+	/* Creo vector de disparo */ 
 	//struct matriz vauxiliar;
 	vauxiliar.filas = disparos.filas;
 	vauxiliar.columnas =  1;
 
 	transpuesta_fc(&vauxiliar, &disparos, vauxiliar.filas, 1, id_d);
-	mc[5]=1;// se creo vector disparo
+	mc[5]=1; // Se creo vector disparo
 
 	// Disparar
 	int i,j;
@@ -492,15 +502,13 @@ int disparar(int id_d)
 		/* code */
 		MA.matriz[0][i] = MN.matriz[0][i];
 	}
-
 	return 1;	
 }
-
 
 void cargar_MA(void)
 {
 	int i;
-  		if(mc[1])/* Si MA existe*/
+  		if(mc[1]) /* Si MA existe */
   		{
   			for (i = 0; i <I.filas ; i++)
 			{
@@ -519,26 +527,23 @@ void tomar_transicion(char *entrada, int *transicion)
   	printk(KERN_INFO "INFO: entrada capturada para tomar nro de transicion: %s\n", entrada);
 
   	t = sscanf(entrada,"_%d", transicion);
-	if(t == 1)
-	{
+	if(t == 1) {
 		printk(KERN_INFO "matrixmod_info: nro de transicion tomada: %d\n", *transicion);
 	}
 	else
 		printk(KERN_INFO "matrixmod_info: no se pudo tomar nro de transicion\n");
 }
 
-
-
 void agregar_valor(char *entrada, char *vaux, char *faux, char *caux, struct matriz *m)
 {
 	static int error;
 	static int f, c, v, t; // f: filas
-			   // c: columnas
-			   // v: valor a cargar en matriz
-			   // t: test funcion sscanf
+			       // c: columnas
+			       // v: valor a cargar en matriz
+			       // t: test funcion sscanf
 
 	if(entrada[2] < 48 || entrada[2] > 57)// filas son de 2 cifras?
-		{
+	{
 			if(entrada[4] < 48 || entrada[4] > 57)// columnas de 1 cifra?
 			{
 				if(entrada[5] == "-") // valor negativo?
@@ -761,9 +766,8 @@ void agregar_valor(char *entrada, char *vaux, char *faux, char *caux, struct mat
 					t = sscanf(faux,"fila %d", &f);
 					t = sscanf(caux, "columna %d", &c);
 					t = sscanf(vaux, "valor %d", &v);
-				}
-				else
-				{	/* Se trata de caso filas: 1 cifra - columnas: 2 cifras - valor: 1 cifra*/
+
+				} else { /* Se trata de caso filas: 1 cifra - columnas: 2 cifras - valor: 1 cifra*/
 					strncat(faux, entrada, 1);
 					strncat(caux, entrada+2, 2);
 					strncat(vaux, entrada+5, 1);
@@ -773,16 +777,13 @@ void agregar_valor(char *entrada, char *vaux, char *faux, char *caux, struct mat
 					t = sscanf(vaux, "valor %d", &v);
 				}
 				
-			}
-			else
-			{	/* Error */
+			} else {
+				/* Error */	
 				error = 2;
 				f = c = v = 0;
 			}
 			
-		}
-		else
-		{
+		} else {
 			f = c = v = 0;
 
 			if(error == 1)
@@ -793,40 +794,35 @@ void agregar_valor(char *entrada, char *vaux, char *faux, char *caux, struct mat
 		}
 		
 		printk(KERN_INFO "INFO: entrada capturada: %s\n", entrada);
-    	printk(KERN_INFO "INFO: Fila ingresada: %d\n", f);
+    		printk(KERN_INFO "INFO: Fila ingresada: %d\n", f);
 		printk(KERN_INFO "INFO: Columna ingresada: %d\n", c);
 		printk(KERN_INFO "INFO: Valor ingresado: %d\n", v);
     	
-		if(f < m->filas && c < m->columnas && error < 1)
-		{
+		if(f < m->filas && c < m->columnas && error < 1) {
 			m->matriz[f][c]=v;
 		}
 }
 
+static ssize_t matrixmod_read(struct file *filp, char __user *buf, size_t len, loff_t *off)
+{
+	int nr_bytes;
+  	count_read++;
+  	//nr_bytes=0;
 
-
-static ssize_t matrixmod_read(struct file *filp, char __user *buf, size_t len, loff_t *off) {
-  
-  int nr_bytes;
-  count_read++;
-  //nr_bytes=0;
-
-  /* Decirle a la aplicación que ya no hay nada que leer  "Para no copiar basura si llamas otra vez" */
-  /*if ((*off) > 0){
-	  printk(KERN_INFO "matrixmod: no hay nada que leer \n");
-      return 0;}*/
-  if((count_read % 2) == 0)
-  {
+  	/* Decirle a la aplicación que ya no hay nada que leer  "Para no copiar basura si llamas otra vez" */
+  	/*if ((*off) > 0){
+	  	printk(KERN_INFO "matrixmod: no hay nada que leer \n");
+      		return 0;}*/
+  	if((count_read % 2) == 0) {
   		printk(KERN_INFO "matrixmod: no hay nada que leer \n");
   		count_read = 0;
-      	return 0;
-  }
+      		return 0;
+  	}
 
-  switch(mostrar_mc)
-  {
+  	switch(mostrar_mc) {
   	case 0:
   		if(mc[0]==1)
-  			nr_bytes=imprimir_matriz(&I, buf, len);
+  			nr_bytes = imprimir_matriz(&I, buf, len);
     
   		else
 			printk(KERN_INFO "matrixmod_error: Matriz I no existe. \n");
@@ -834,46 +830,52 @@ static ssize_t matrixmod_read(struct file *filp, char __user *buf, size_t len, l
   	
   	case 1:
   		if(mc[1]==1)
-  			nr_bytes=imprimir_matriz(&MA, buf, len);
+  			nr_bytes = imprimir_matriz(&MA, buf, len);
     
   		else
 			printk(KERN_INFO "matrixmod_error: Vector MA no existe.\n");
 		break;
 	case 2:
   		if(mc[2]==1)
-  			nr_bytes=imprimir_matriz(&disparos, buf, len);
+  			nr_bytes = imprimir_matriz(&disparos, buf, len);
     
   		else
 			printk(KERN_INFO "matrixmod_error: Matriz mdisparos no existe.\n");
 		break;
 	case 3:
   		if(mc[3]==1)
-  			nr_bytes=imprimir_matriz(&MI, buf, len);
+  			nr_bytes = imprimir_matriz(&MI, buf, len);
     
   		else
-			printk(KERN_INFO "matrixmod_error: vector MI no existe.\n");
+			printk(KERN_INFO "matrixmod_error: Vector MI no existe.\n");
 		break;
 	case 4:
   		if(mc[4]==1)
-  			nr_bytes=imprimir_matriz(&MN, buf, len);
+  			nr_bytes = imprimir_matriz(&MN, buf, len);
     
   		else
 			printk(KERN_INFO "matrixmod_error: Vector MN no existe.\n");
 		break;
 	case 5:
   		if(mc[5]==1)
-  			nr_bytes=imprimir_matriz(&vauxiliar, buf, len);
+  			nr_bytes = imprimir_matriz(&vauxiliar, buf, len);
     
   		else
 			printk(KERN_INFO "matrixmod_error: Vector disparo d no existe.\n");
 		break;
-
+	case 6:
+  		if(mc[6]==1)
+  			nr_bytes = imprimir_matriz(&H, buf, len);
+    
+  		else
+			printk(KERN_INFO "matrixmod_error: Matriz H no existe.\n");
+		break;
   	//default:
-  }
+  	}
 
-  (*off)+=len;  /* Actualizo el puntero de archivo */
-  //vfree(kbuf);
-  return nr_bytes; 
+  	(*off)+=len;  /* Actualizo el puntero de archivo */
+  	//vfree(kbuf);
+  	return nr_bytes; 
 }
 
 static const struct file_operations proc_entry_fops = {
@@ -892,95 +894,91 @@ static const struct file_operations proc_entry_fops = {
 int imprimir_matriz(struct matriz *m, char *buf, size_t len)
 {
 	char kbuf[BUFFER_LENGTH] = "";	
-	int i,j,k, nr_bytes;// i,j : recorren la matriz
-			  			// k: va corriendo el puntero del buffer del kernel kbuf;
-						// nr_bytes:
-	k=0;
-	nr_bytes=0;
+	int i,j,k, nr_bytes; // i,j : recorren la matriz
+			     // k: va corriendo el puntero del buffer del kernel kbuf;
+			     // nr_bytes:
+	k = 0;
+	nr_bytes = 0;
 
-	for(i=0; i<m->filas; i++){
-		for(j=0; j<m->columnas; j++)
+	for(i = 0; i<m->filas; i++)
+	{
+		for(j = 0; j<m->columnas; j++)
 		{
-			if(m->matriz[i][j] >= 0){
-				kbuf[k]=(char)32;/* Ascii de espacio*/ k++;
+			if(m->matriz[i][j] >= 0) {
+				kbuf[k]=(char)32; /* Ascii de espacio */ k++;
 				kbuf[k]=(char)32; k++;
 				kbuf[k]=(char)(m->matriz[i][j] + 48); k++;
-				}
-	
-			else{
+			} else {
 				kbuf[k]=(char)32; k++;
-				kbuf[k]=(char)45;/* Ascii de signo negativo*/ k++;
-//				kbuf[k]=(char)(48 + (48 - (A.matriz[i][j] + 48))); k++;
+				kbuf[k]=(char)45;/* Ascii de signo negativo */ k++;
+				//kbuf[k]=(char)(48 + (48 - (A.matriz[i][j] + 48))); k++;
 				kbuf[k]=(char)(48 - m->matriz[i][j]); k++;  
 				/* Si A[i][j]=-1 --> Esto seria: 48 - (-1) = 49 que es el codigo ASCII de 1, es decir que convertimos
 				   los negativos a positivos para ser mostrados de manera correcta en la entrada estandar. */
 			}
-		}// Fin for 1
+		} // Fin for 1
 		
 		kbuf[k]=(char)10; /* Ascii salto de linea */ k++;
 	} // Fin for 2
 	
 	nr_bytes=k+1;
 		
-	if (len< nr_bytes){
+	if (len< nr_bytes) {
 		printk(KERN_INFO "matrixmod: No queda espacio en el dispositivo \n");
-	    return -ENOSPC; //No queda espacio en el dispositivo
+	    	return -ENOSPC; // No queda espacio en el dispositivo
 	}
  
    	/* Transferencia de datos desde el espacio kernel al espacio de usuario */  
-    if(copy_to_user(buf, kbuf, nr_bytes)){
+        if(copy_to_user(buf, kbuf, nr_bytes)) {
 		printk(KERN_INFO "matrixmod: Argumento invalido\n");
-   		return -EINVAL; //Argumento invalido
+   		return -EINVAL; // Argumento invalido
 	}
 	
 	return nr_bytes;
 }
 
-
-/* Asigna cero a las filas y columnas de todas las matrices*/
+/* Asigna cero a las filas y columnas de todas las matrices */
 void iniciar_matrices(void )
 {
-	I.filas = I.columnas =0;
+	I.filas = I.columnas = 0;
 	MA.filas = MA.columnas = 0;
 	disparos.filas = disparos.columnas = 0;
 	MI.filas = MI.columnas = 0;
 	MN.filas = MN.columnas = 0;
+	H.filas = H.columnas = 0;
 
-	mc[0]=0; // matriz I no creada
-	mc[1]=0; // matriz MA no creada
-	mc[2]=0; // matriz de vectores de disparos no creada
-	mc[3]=0; // matriz MI no creada
-	mc[4]=0; // matriz MN no creada
-	mc[5]=0;// no se creo vector disparo
+	mc[0] = 0; // matriz I no creada
+	mc[1] = 0; // matriz MA no creada
+	mc[2] = 0; // matriz de vectores de disparos no creada
+	mc[3] = 0; // matriz MI no creada
+	mc[4] = 0; // matriz MN no creada
+	mc[5] = 0; // no se creo vector disparo
+	mc[6] = 0; // matriz H no creada
 	mostrar_mc = 0;
 }
 
-
-int init_modlist_module( void )
+int init_modlist_module(void)
 {
-  int ret = 0;
+	int ret = 0;
 
-  /* en matrixmod defenido en /proc, solo podemos usar las funciones
-	 defenidas en proc_entry_fops */
-  proc_entry = proc_create( "matrixmod", 0666, NULL, &proc_entry_fops); 
-  if (proc_entry == NULL) {
-    ret = -ENOMEM; // No hay bastante espacio
-    printk(KERN_INFO "matrixmod: No se puede crear la entrada /proc\n");
-	
-  }else {
-    printk(KERN_INFO "matrixmod: Modulo cargado.\n");
-	//cargar_matriz_uno(&A, 10, 10);
-	iniciar_matrices();
-  }
+  	/* en matrixmod defenido en /proc, solo podemos usar las funciones
+	   defenidas en proc_entry_fops */
+  	proc_entry = proc_create( "matrixmod", 0666, NULL, &proc_entry_fops); 
+  	if(proc_entry == NULL) {
+    		ret = -ENOMEM; // No hay bastante espacio
+    		printk(KERN_INFO "matrixmod: No se puede crear la entrada /proc\n");
+  	} else {
+		printk(KERN_INFO "matrixmod: Modulo cargado.\n");
+		//cargar_matriz_uno(&A, 10, 10);
+		iniciar_matrices();
+  	}
 
-  return ret;
-
+  	return ret;
 }
 
-
-void exit_modlist_module( void )
+void exit_modlist_module(void)
 {
-  // agregar --> eliminar espacio en memoria
+	// Agregar --> eliminar espacio en memoria
 	if(mc[0] == 1)
 		liberar_mem(&I);
 
@@ -999,10 +997,13 @@ void exit_modlist_module( void )
 	if(mc[5] == 1)
 		liberar_mem(&vauxiliar);
 
-  remove_proc_entry("matrixmod", NULL); // eliminar la entrada del /proc
-  printk(KERN_INFO "matrixmod: Modulo descargado.\n");
+	if(mc[6] == 1)
+		liberar_mem(&H);
+
+  	remove_proc_entry("matrixmod", NULL); // Eliminar la entrada del /proc
+  	printk(KERN_INFO "matrixmod: Modulo descargado.\n");
 }
 
+module_init(init_modlist_module);
+module_exit(exit_modlist_module);
 
-module_init( init_modlist_module );
-module_exit( exit_modlist_module );

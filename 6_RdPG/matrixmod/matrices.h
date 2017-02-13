@@ -3,7 +3,6 @@
 #include <linux/string.h>
 #include <linux/vmalloc.h>
 
-
 #define TAM (1024*10 -1)
 
 // Estructura utilizada por libreria
@@ -26,11 +25,7 @@ void transpuesta(struct matriz *c, struct matriz *x);
 void transpuesta_fc(struct matriz *c, struct matriz *x, int f, int col, int id_d);
 void identidad(struct matriz *c, int dimension);
 
-
-
-
 // Implementacion de funciones
-
 
 /*
 * Descripcion: Se aloja memoria para crear una matriz, en base al parametro recibido.
@@ -43,7 +38,6 @@ void identidad(struct matriz *c, int dimension);
 int **crear_matriz(struct matriz *x)
 {	
 	int **m;
-	
 	int i = 0;
 
 	// Reserva de Memoria para filas m
@@ -55,7 +49,6 @@ int **crear_matriz(struct matriz *x)
 
 	return m;
 }
-
 
 /*
 * Descripcion: Se libera memoria de una matriz, en base al parametro recibido.
@@ -101,15 +94,11 @@ void limpiar_matriz(struct matriz *x)
 	}
 }
 
-
-
-
 /*
 * Descripcion de funcion: 
 * Parametros:
 * @param **x: Doble puntero de matriz de incidencia.
 */
-
 void cargar_matriz_cero(struct matriz *x, int filas, int columnas)
 {
 	int i,j;
@@ -130,13 +119,11 @@ void cargar_matriz_cero(struct matriz *x, int filas, int columnas)
 	}
 }
 
-
 /*
 * Descripcion de funcion: 
 * Parametros:
 * @param **x: Doble puntero de matriz de incidencia.
 */
-
 void cargar_matriz_uno(struct matriz *x, int filas, int columnas)
 {
 	int i,j;
@@ -155,7 +142,6 @@ void cargar_matriz_uno(struct matriz *x, int filas, int columnas)
 		for(j=0; j<x->columnas; j++)
 			x->matriz[i][j]= 1;
 	}
-
 }
 
 /*
@@ -169,7 +155,6 @@ void cargar_matriz_uno(struct matriz *x, int filas, int columnas)
 * @param *y: puntero de una estructura de tipo matriz utilizada como el segundo
 * 			 operando de la operacion suma.
 */
-
 void sumar_matriz(struct matriz *c, struct matriz *x, struct matriz *y)
 {
 	int i,j;
@@ -182,8 +167,6 @@ void sumar_matriz(struct matriz *c, struct matriz *x, struct matriz *y)
 			c->matriz[i][j]= x->matriz[i][j] + y->matriz[i][j];
 		}
 	}
-	
-	//return c;
 }
 
 /*
@@ -243,7 +226,6 @@ void mult_matriz(struct matriz *c, struct matriz *x, struct matriz *y)
 	}
 }
 
-
 /*
 * Descripcion: Funcion que imprime matriz por pantalla.
 * Parametros:
@@ -268,7 +250,6 @@ void mult_matriz(struct matriz *c, struct matriz *x, struct matriz *y)
 	}
 	printf("\n\n");
 }*/
-
 
 /*
 * Descripcion: Funcion que obtiene la traspuesta de una matriz.
@@ -301,9 +282,9 @@ void transpuesta(struct matriz *c, struct matriz *x)
 * 			 datos resultantes de la matriz transpuesta.
 * @param *x: puntero de una estructura de tipo matriz utilizada para obtener la
 * 			 matriz transpuesta.
-* @param f: numero de filas deseado
-* @param  c: numero de columnas deseado
-* @param  id_d: identificador de vector disparo (fila de matriz mdisparos)
+* @param f: numero de filas deseado.
+* @param  c: numero de columnas deseado.
+* @param  id_d: identificador de vector disparo (fila de matriz mdisparos).
 
 */
 void transpuesta_fc(struct matriz *c, struct matriz *x, int f, int col, int id_d)
@@ -322,7 +303,6 @@ void transpuesta_fc(struct matriz *c, struct matriz *x, int f, int col, int id_d
 		}
 	}
 }
-
 
 /*
 * Descripcion: Funcion que obtiene la matriz identidad segun dimension.
@@ -351,3 +331,4 @@ void identidad(struct matriz *c, int dimension)
 		}
 	}
 }
+

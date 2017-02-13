@@ -1,8 +1,6 @@
 // Funciones de libreria
 void generar_transiciones(struct matriz *T, struct matriz *MI);
 
-
-
 // Implementacion de funciones
 /*
 * Descripcion de funcion: 
@@ -33,3 +31,4 @@ void generar_transiciones(struct matriz *T, struct matriz *MI)
 		}
 	}
 }
+
