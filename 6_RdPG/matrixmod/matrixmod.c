@@ -14,7 +14,7 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Ing. Micolini Orlando, Garcia Cannata, Sosa Ludueña");
 
 /* Descripcion del modulo*/
-MODULE_DESCRIPTION("Implementa una Red de Petri en un módulo del kernel "\
+MODULE_DESCRIPTION("Implementa una RdPG en un módulo del kernel "\
 					"administrable por una entrada en /proc");
 
 
@@ -41,7 +41,7 @@ static struct proc_dir_entry *proc_entry; // entrada de /proc
 static int Device_Open = 0; /* es un device open? */
 							/* Uso para prevenir multiples accesos en el dispositivo */
 struct matriz A; // Matriz A de prueba
-struct matriz I; // Matriz de incidencia
+struct matriz I; // Matriz de incidencia I
 struct matriz MA; // Vector de marcdo actual
 struct matriz MI; // Vector de marcado inicial
 struct matriz MN; // Vector de marcado nuevo
