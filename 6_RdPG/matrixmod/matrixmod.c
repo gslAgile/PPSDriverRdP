@@ -123,6 +123,10 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
 		
 		agregar_valor(entrada, vaux, faux, caux, &I);
 
+  }else if( sscanf(kbuf,"add H %s", entrada) == 1){
+		
+		agregar_valor(entrada, vaux, faux, caux, &H);
+
   }else if( sscanf(kbuf,"crear I %s",entrada) == 1) {
 
 		/* Tomar valores de filas y columnas segun la entrada */
@@ -280,7 +284,7 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
 
   }else if ( strcmp(kbuf,"mostrar mc\n") == 0){ // strcmp() return : 0 -> si son iguales 
 	
-	printk(KERN_INFO "matrixmod_info: mc = [%d %d %d %d %d %d]\n", mc[0], mc[1], mc[2], mc[3], mc[4], mc[5]]);
+	printk(KERN_INFO "matrixmod_info: mc = [%d %d %d %d %d %d %d]\n", mc[0], mc[1], mc[2], mc[3], mc[4], mc[5]], mc[6]);
 
   }else
 	    printk(KERN_INFO "ERROR: comando no valido!!!\n");
