@@ -13,13 +13,10 @@ MODULE_LICENSE("GPL");
 /* Autores */
 MODULE_AUTHOR("Ing. Micolini Orlando, Garcia Cannata, Sosa Ludueña");
 
-<<<<<<< HEAD
 /* Descripcion del modulo */
 MODULE_DESCRIPTION("Implementa una Red de Petri en un módulo del kernel "\
-=======
 /* Descripcion del modulo*/
 MODULE_DESCRIPTION("Implementa una RdPG en un módulo del kernel "\
->>>>>>> e995e7b8b179fefbeeb14a8da70bb62fd15a3342
 					"administrable por una entrada en /proc");
 
 #define BUFFER_LENGTH       2048
@@ -43,20 +40,17 @@ static struct proc_dir_entry *proc_entry; // Entrada de /proc
 // Variables Globales
 static int Device_Open = 0; /* Es un device open? */
 			    /* Uso para prevenir multiples accesos en el dispositivo */
-struct matriz A; // Matriz A de prueba
-<<<<<<< HEAD
-struct matriz I; // Matriz de incidencia
-struct matriz H; // Matriz de incidencia H asociada a los brazos inhibidores
-=======
-struct matriz I; // Matriz de incidencia I
->>>>>>> e995e7b8b179fefbeeb14a8da70bb62fd15a3342
-struct matriz MA; // Vector de marcdo actual
-struct matriz MI; // Vector de marcado inicial
-struct matriz MN; // Vector de marcado nuevo
-struct matriz vauxiliar;
-int mc[10]; // mc: vector para detectar la creacion de las matrices en el modulo.
+struct matriz A; 	// Matriz A de prueba
+struct matriz I; 	// Matriz de incidencia, asociado a mc[0]
+struct matriz H; 	// Matriz de incidencia H asociada a los brazos inhibidores, asociado a mc[6]
+struct matriz MA; 	// Vector de marcado actual, asociado a mc[1]
+struct matriz MI; 	// Vector de marcado inicial, asociado a mc[3]
+struct matriz MN; 	// Vector de marcado nuevo, asociado a mc[4]
+struct matriz E; 	// Vector de transiciones sensibilizadas, asociado a mc[7]
+struct matriz vauxiliar; // vector donde se almacenara alguno de todos los disparos, asociado a mc[5]
+struct matriz disparos;  // matriz con cada uno de los vectores disparos, asociado a mc[2]
+int mc[20]; // mc: vector para detectar la creacion de las matrices en el modulo.
 int mostrar_mc; // entero identificatorio de cual de las matrices creadas mostrara para funcion read
-struct matriz disparos;  // *matriz con cada uno de los vectores disparos
 int cd; // numero de vectores y elementos en vector disparo
 int count_read = 0; // contador de lecturas en modulo
 
@@ -133,9 +127,11 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
 
 		/* Tomar valores de filas y columnas segun la entrada */
   		tomar_fc(&f, &c, entrada);
+  		
   		/* Creamos matriz I segun entrada recibida */
 		crear_rdp(&f, &c, &I, 0); /* 0: hace referencia a mc[0] para detectar que se creo
 						una matriz en referencia a esa posicion, en este caso I */
+		
 		if(mc[0]) // Si se creo exitosamente Matriz I
 		{ 
 			int ff, cc;
@@ -144,10 +140,17 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
 			ff = 1;
 			cc = I.filas;
 
+			/* Creamos vector de marcado actual MA, por defecto en cero sus valores hasta crear MI*/
 			crear_rdp(&ff, &cc, &MA, 1); /* 1: hace referencia a mc[1] para detectar que se creo
   							   una matriz en referencia a esa posicion, en este caso MA*/
+
+			/* Creamos vector de marcado nuevo MN, por defecto en cero sus valores hasta crear MI*/
 			crear_rdp(&ff, &cc, &MN, 4); /* 4: hace referencia a mc[4] para detectar que se creo
   						           una matriz en referencia a esa posicion, en este caso MN*/
+
+			/* Creamos vector E de transisiones sensibilizadas, por defecto en cero hasta conocer MI*/
+			// Continua codigo de creacion de E aqui....
+
 		}
 	 
   }else if( sscanf(kbuf,"crear MI %s",entrada) == 1) {
@@ -464,7 +467,7 @@ void crear_mdisparos(int c, int mc_id)
 	disparos.filas = cd;
 	disparos.columnas = cd;
 
-	identidad(&disparos, cd);
+	identidad(&disparos, cd); // matriz disparos se crea como una matriz identidad c x c
 
 	if(disparos.matriz != NULL)
 		mc[mc_id] = 1; // Matriz de disparos creada con exito
@@ -956,13 +959,14 @@ void iniciar_matrices(void )
 	MN.filas = MN.columnas = 0;
 	H.filas = H.columnas = 0;
 
-	mc[0] = 0; // matriz I no creada
-	mc[1] = 0; // matriz MA no creada
-	mc[2] = 0; // matriz de vectores de disparos no creada
-	mc[3] = 0; // matriz MI no creada
-	mc[4] = 0; // matriz MN no creada
-	mc[5] = 0; // no se creo vector disparo
-	mc[6] = 0; // matriz H no creada
+	mc[0] = 0; 		// matriz I no creada
+	mc[1] = 0; 		// vector MA no creado
+	mc[2] = 0; 		// matriz de vectores de disparos no creada
+	mc[3] = 0; 		// vector MI no creado
+	mc[4] = 0; 		// vector MN no creado
+	mc[5] = 0; 		// no se creo vector disparo
+	mc[6] = 0; 		// matriz H no creada
+	mc[7] = 0;		// vector E no creado
 	mostrar_mc = 0;
 }
 
