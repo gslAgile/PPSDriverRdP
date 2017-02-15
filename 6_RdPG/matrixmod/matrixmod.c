@@ -39,13 +39,13 @@ static struct proc_dir_entry *proc_entry; // Entrada de /proc
 // Variables Globales
 static int Device_Open = 0; /* Es un device open? */
 			    /* Uso para prevenir multiples accesos en el dispositivo */
-struct matriz A; 	// Matriz A de prueba
-struct matriz I; 	// Matriz de incidencia, asociado a mc[0]
-struct matriz H; 	// Matriz de incidencia H asociada a los brazos inhibidores, asociado a mc[6]
+struct matriz A; 	  // Matriz A de prueba
+struct matriz I; 	  // Matriz de incidencia, asociado a mc[0]
+struct matriz H; 	  // Matriz de incidencia H asociada a los brazos inhibidores, asociado a mc[6]
 struct matriz MA; 	// Vector de marcado actual, asociado a mc[1]
 struct matriz MI; 	// Vector de marcado inicial, asociado a mc[3]
 struct matriz MN; 	// Vector de marcado nuevo, asociado a mc[4]
-struct matriz E; 	// Vector de transiciones sensibilizadas, asociado a mc[7]
+struct matriz E; 	  // Vector de transiciones sensibilizadas, asociado a mc[7]
 struct matriz vauxiliar; // vector donde se almacenara alguno de todos los disparos, asociado a mc[5]
 struct matriz disparos;  // matriz con cada uno de los vectores disparos, asociado a mc[2]
 int mc[20]; // mc: vector para detectar la creacion de las matrices en el modulo.
@@ -193,7 +193,10 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
 	if(transicion > -1 && transicion < I.filas) // Si realizo disparo exitosamente
 	{
 		if(disparar(transicion, 'E') == 1)
+    {
 			printk(KERN_INFO "matrixmod_info: El disparo fue exitoso!!!\n");
+      cargar_E();
+    }
 
 		else
 		printk(KERN_INFO "matrixmod_info: El disparo no fue exitoso!!!\n");
@@ -513,30 +516,34 @@ int disparar(int id_d, char mode)
 	mc[5]=1; // Se creo vector disparo
 
 	// Disparar
-	int i,j;
+	int i,j, auxMN;
 	for (i = 0; i < I.columnas; i++)
 	{
-		/* code */
 		if(vauxiliar.matriz[i][0]==1)
 		{
 			for (j = 0; j < I.filas; j++)
 			{
-				/* code */
-				MN.matriz[0][j] = MA.matriz[0][j] + I.matriz[j][i]*vauxiliar.matriz[i][0];
-				if(MN.matriz[0][j]< 0)
-					return -1;
+				if(mode == 'E')
+				{
+            MN.matriz[0][j] = MA.matriz[0][j] + I.matriz[j][i]*vauxiliar.matriz[i][0];
+    				if(MN.matriz[0][j]< 0)
+    					return -1;
+        }
+        else // modo de disparo implicito no intera almacenar el estado de MN ni MA pero si saberlo
+        {
+          // Se almacena de manera auxiliar los valores del nuevo estado de la transicion, para verificar si esta sensibilizada
+          auxMN = MA.matriz[0][j] + I.matriz[j][i]*vauxiliar.matriz[i][0];
+          if(auxMN < 0)
+              return -1;
+        }
 			}
 		}
 	}
 
   if(mode == 'E')
-  {
     	for (i = 0; i <I.filas ; i++)
-    	{
-    		/* code */
     		MA.matriz[0][i] = MN.matriz[0][i];
-    	}
-  }
+
 	return 1;	
 }
 
@@ -1039,7 +1046,7 @@ int init_modlist_module(void)
     		ret = -ENOMEM; // No hay bastante espacio
     		printk(KERN_INFO "matrixmod: No se puede crear la entrada /proc\n");
   	} else {
-		printk(KERN_INFO "matrixmod: Modulo cargado.\n");
+		printk(KERN_INFO "matrixmod: Modulo cargado en kernel.\n");
 		//cargar_matriz_uno(&A, 10, 10);
 		iniciar_matrices();
   	}
@@ -1075,7 +1082,7 @@ void exit_modlist_module(void)
     liberar_mem(&E);
 
   	remove_proc_entry("matrixmod", NULL); // Eliminar la entrada del /proc
-  	printk(KERN_INFO "matrixmod: Modulo descargado.\n");
+  	printk(KERN_INFO "matrixmod: Modulo descargado de kernel.\n");
 }
 
 module_init(init_modlist_module);

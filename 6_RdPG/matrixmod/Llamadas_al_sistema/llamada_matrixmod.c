@@ -22,6 +22,7 @@ void mostrar_I(char *cadena, int pfd);
 void mostrar_MI(char *cadena, int pfd);
 void mostrar_MA(char *cadena, int pfd);
 void mostrar_MN(char *cadena, int pfd);
+void mostrar_E(char *cadena, int pfd);
 void disparar_trasnsicion(char * cadena, int pfd);
 void matrixmod_crear(char pcomando[256], int f, int c, int pfd);
 void matrixmod_add(char pcomando[256], struct matriz *x, int pfd);
@@ -76,7 +77,7 @@ int main()
 
 
 	/* --- MENU DE OPCIONES ---	*/
-    while ( opcion != 6 )
+    while ( opcion != 7 )
     {
         printf( "\n   >>>_			MENU 			_<<<\n");
         printf( "\n   1. Ver matriz de incidencia de la RdP.");
