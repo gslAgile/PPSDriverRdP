@@ -13,8 +13,6 @@ MODULE_LICENSE("GPL");
 /* Autores */
 MODULE_AUTHOR("Ing. Micolini Orlando, Garcia Cannata, Sosa Ludueña");
 
-/* Descripcion del modulo */
-MODULE_DESCRIPTION("Implementa una Red de Petri en un módulo del kernel "\
 /* Descripcion del modulo*/
 MODULE_DESCRIPTION("Implementa una RdPG en un módulo del kernel "\
 					"administrable por una entrada en /proc");
@@ -299,7 +297,7 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
 
   }else if ( strcmp(kbuf,"mostrar mc\n") == 0){ // strcmp() return : 0 -> si son iguales 
 	
-	printk(KERN_INFO "matrixmod_info: mc = [%d %d %d %d %d %d %d %d]\n", mc[0], mc[1], mc[2], mc[3], mc[4], mc[5]], mc[6], mc[7]);
+	printk(KERN_INFO "matrixmod_info: mc = [%d %d %d %d %d %d %d %d]\n", mc[0], mc[1], mc[2], mc[3], mc[4], mc[5], mc[6], mc[7]);
 
   }else
 	    printk(KERN_INFO "ERROR: comando no valido!!!\n");

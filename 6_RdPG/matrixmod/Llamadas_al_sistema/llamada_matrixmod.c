@@ -83,8 +83,9 @@ int main()
         printf( "\n   2. Ver marcado inicial de la RdP.");
         printf( "\n   3. Ver marcado actual de la RdP.");
         printf( "\n   4. Ver marcado nuevo de la RdP.");
-        printf( "\n   5. Disparar transicion sobre RdP.");
-        printf( "\n   6. Salir." );
+        printf( "\n   5. Ver vector E de transicicones sensibilizadas en la RdP.");
+        printf( "\n   6. Disparar transicion sobre RdP.");
+        printf( "\n   7. Salir." );
         printf( "\n\n   Introduzca opcion (1-6): ");
 
         scanf( "%d", &opcion );
@@ -109,12 +110,16 @@ int main()
                     mostrar_MN(cadena, fd);
                     break;
 
-            case 5: printf( "\n   Introduzca comando de disparo de transicion: ");
+            case 5: printf( "\n   Vector E de transiciones sensibilizadas:\n " );
+                    mostrar_E(cadena, fd);
+                    break;
+
+            case 6: printf( "\n   Introduzca comando de disparo de transicion: ");
             		scanf( "%s", cadena);
                     disparar_trasnsicion(cadena, fd);
                     break;
 
-            case 6: printf( "\n   Saliendo de aplicacion.\n\n");
+            case 7: printf( "\n   Saliendo de aplicacion.\n\n");
             		break;
 
             default: printf("\n   Comando no valido. Intente nuevamente segun opciones de menu.\n " );
@@ -215,6 +220,20 @@ void mostrar_MN(char *cadena, int pfd)
 {
 	// Write sobre driver
 	driver_write("mostrar MN\n", pfd);
+
+	// Read fichero
+	driver_read(cadena, pfd);
+
+	printf("\n%s\n", cadena);
+
+	memset(cadena, '\0', 256);// se limpia cadena
+}
+
+
+void mostrar_E(char *cadena, int pfd)
+{
+	// Write sobre driver
+	driver_write("mostrar E\n", pfd);
 
 	// Read fichero
 	driver_read(cadena, pfd);
