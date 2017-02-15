@@ -31,8 +31,9 @@ int detectar_char(char c[2] ,char *p);
 void tomar_fc(int *f, int *c, char *entrada);
 void crear_rdp(int *f, int *c, struct matriz *m, int pmc);
 void crear_mdisparos(int c, int mc_id);
-int disparar(int id_d);
+int disparar(int id_d, char mode);
 void cargar_MA(void);
+void cargar_E(void);
 void tomar_transicion(char *entrada, int *transicion);
 
 static struct proc_dir_entry *proc_entry; // Entrada de /proc
@@ -53,6 +54,7 @@ int mc[20]; // mc: vector para detectar la creacion de las matrices en el modulo
 int mostrar_mc; // entero identificatorio de cual de las matrices creadas mostrara para funcion read
 int cd; // numero de vectores y elementos en vector disparo
 int count_read = 0; // contador de lecturas en modulo
+int cvmi = 0; // cvmi: contador de valores ingresados en MI
 
 // Implementacion de Funciones
 /*
@@ -134,7 +136,7 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
   		
   		/* Creamos matriz I segun entrada recibida */
 		crear_rdp(&f, &c, &I, 0); /* 0: hace referencia a mc[0] para detectar que se creo
-						una matriz en referencia a esa posicion, en este caso I */
+						                        una matriz en referencia a esa posicion, en este caso I */
 		
 		if(mc[0]) // Si se creo exitosamente Matriz I
 		{ 
@@ -146,14 +148,16 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
 
 			/* Creamos vector de marcado actual MA, por defecto en cero sus valores hasta crear MI*/
 			crear_rdp(&ff, &cc, &MA, 1); /* 1: hace referencia a mc[1] para detectar que se creo
-  							   una matriz en referencia a esa posicion, en este caso MA*/
+  							                         una matriz en referencia a esa posicion, en este caso MA*/
 
 			/* Creamos vector de marcado nuevo MN, por defecto en cero sus valores hasta crear MI*/
 			crear_rdp(&ff, &cc, &MN, 4); /* 4: hace referencia a mc[4] para detectar que se creo
-  						           una matriz en referencia a esa posicion, en este caso MN*/
+  						                           una matriz en referencia a esa posicion, en este caso MN*/
 
 			/* Creamos vector E de transisiones sensibilizadas, por defecto en cero hasta conocer MI*/
-			// Continua codigo de creacion de E aqui....
+      cc = I.columnas; // se asigna cantida de columnas cc a la cantidad de columnas de I (equivalente a la cantidad de transiciones)
+			crear_rdp(&ff, &cc, &E, 7);/* 7: hace referencia a mc[7] para detectar que se creo
+                                       una matriz en referencia a esa posicion, en este caso E*/
 
 		}
 	 
@@ -161,9 +165,9 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
 
   		/*Tomar valores de filas y columnas segun la entrada*/
   		tomar_fc(&f, &c, entrada);
-  		/* Creamos matriz MA segun entrada recibida*/
+  		/* Creamos matriz MI segun entrada recibida*/
   		crear_rdp(&f, &c, &MI, 3); /* 3: hace referencia a mc[3] para detectar que se creo
-  											       una matriz en referencia a esa posicion, en este caso MI*/
+  											               una matriz en referencia a esa posicion, en este caso MI*/
   		
   }else if( sscanf(kbuf,"crear H %s",entrada) == 1) {
 
@@ -171,20 +175,26 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
   		tomar_fc(&f, &c, entrada);
   		/* Creamos matriz MA segun entrada recibida*/
   		crear_rdp(&f, &c, &H, 6); /* 6: hace referencia a mc[6] para detectar que se creo
-  											       una matriz en referencia a esa posicion, en este caso H*/
+  											              una matriz en referencia a esa posicion, en este caso H*/
   		
   }else if( sscanf(kbuf,"add MI %s", entrada) == 1){
 		
 		agregar_valor(entrada, vaux, faux, caux, &MI);
+    cvmi++; // incremento en la cuenta de valores de MI
 		if(mc[1]) // Si MA existe
 			cargar_MA(); // Se actualiza cada valor de MI(marcado inicial) en MA(maracado actual)
+
+    if(cvmi ==I.filas) // Se completo el ingreso de MI?
+    {
+      cargar_E();
+    }
 
   }else if ( sscanf(kbuf,"STEP_CMD%s", entrada) == 1){
 	
 	tomar_transicion(entrada, &transicion);
 	if(transicion > -1 && transicion < I.filas) // Si realizo disparo exitosamente
 	{
-		if(disparar(transicion) == 1)
+		if(disparar(transicion, 'E') == 1)
 			printk(KERN_INFO "matrixmod_info: El disparo fue exitoso!!!\n");
 
 		else
@@ -267,6 +277,11 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
 	mostrar_mc = 4; // se selecciona identificador para mostrar la matriz MA
 	printk(KERN_INFO "matrixmod_info: Se asigna vector MN para mostrar en funcion read().\n");
 
+  }else if ( strcmp(kbuf,"mostrar E\n") == 0){ // strcmp() return : 0 -> si son iguales 
+  
+  mostrar_mc = 7; // se selecciona identificador para mostrar la matriz E
+  printk(KERN_INFO "matrixmod_info: Se asigna vector E para mostrar en funcion read().\n");
+
   }else if ( strcmp(kbuf,"mostrar d\n") == 0){ // strcmp() return : 0 -> si son iguales 
 	
 	mostrar_mc = 5; // se selecciona identificador para mostrar la matriz MA
@@ -284,7 +299,7 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
 
   }else if ( strcmp(kbuf,"mostrar mc\n") == 0){ // strcmp() return : 0 -> si son iguales 
 	
-	printk(KERN_INFO "matrixmod_info: mc = [%d %d %d %d %d %d %d]\n", mc[0], mc[1], mc[2], mc[3], mc[4], mc[5]], mc[6]);
+	printk(KERN_INFO "matrixmod_info: mc = [%d %d %d %d %d %d %d %d]\n", mc[0], mc[1], mc[2], mc[3], mc[4], mc[5]], mc[6], mc[7]);
 
   }else
 	    printk(KERN_INFO "ERROR: comando no valido!!!\n");
@@ -483,10 +498,13 @@ void crear_mdisparos(int c, int mc_id)
 * Descripcion: Esta funcion realiza el disparo sobre la RdP de acuerdo a un vector de disparo indicado
 * por parametro, verificando la sensibilidad de RdP para ese disparo, actualizando o no el marcado actual.
 * @param id_d: identificador de disparo a realizar sobre RdP.
+* @param mode: indica el modo de disparo.
+               - I: modo implicito, no actualiza el vector de marcado actual MA
+               - E: modo explicito, actualiza el vector de marcado actual MA
 * @return -1: si no se puede realizar disparo sobre RdP (RdP no esta sensibilizada para ese disparo).
 * @return 1: si puedo realizar disparo sobre RdP (RdP estaba sensibilizada para ese disparo).
 */
-int disparar(int id_d)
+int disparar(int id_d, char mode)
 {
 	/* Creo vector de disparo */ 
 	//struct matriz vauxiliar;
@@ -513,14 +531,21 @@ int disparar(int id_d)
 		}
 	}
 
-	for (i = 0; i <I.filas ; i++)
-	{
-		/* code */
-		MA.matriz[0][i] = MN.matriz[0][i];
-	}
+  if(mode == 'E')
+  {
+    	for (i = 0; i <I.filas ; i++)
+    	{
+    		/* code */
+    		MA.matriz[0][i] = MN.matriz[0][i];
+    	}
+  }
 	return 1;	
 }
 
+/*
+* Descripcion: Esta funcion...
+* @param:
+*/
 void cargar_MA(void)
 {
 	int i;
@@ -535,6 +560,29 @@ void cargar_MA(void)
 }
 
 /*
+* Descripcion: Esta funcion se encarga de cargar el vector E, una vez que se completo la carga de MI.
+* La funcion dispara todas las transiciones implitamente para determinar que transiciones estan sensibilizadas
+* y cuales no lo estan determinando de esa manera el vector de transiciones sensibilizadas.
+* @param: no se reciben parmetros en la funcion.
+*/
+void cargar_E(void)
+{
+  int i;
+    for (i = 0; i < I.columnas; i++)
+    {
+      if(disparar(i,'I') == 1)
+        E.matriz[0][i] = 1;
+
+      else
+        E.matriz[0][i] = 0;
+    }
+}
+
+
+
+/*
+* Descripcion: Esta funcion...
+* @param:
 */
 void tomar_transicion(char *entrada, int *transicion)
 {
@@ -886,6 +934,14 @@ static ssize_t matrixmod_read(struct file *filp, char __user *buf, size_t len, l
   		else
 			printk(KERN_INFO "matrixmod_error: Matriz H no existe.\n");
 		break;
+
+  case 7:
+      if(mc[7]==1)
+        nr_bytes = imprimir_matriz(&E, buf, len);
+    
+      else
+      printk(KERN_INFO "matrixmod_error: Matriz E no existe.\n");
+    break;
   	//default:
   	}
 
@@ -1016,6 +1072,9 @@ void exit_modlist_module(void)
 
 	if(mc[6] == 1)
 		liberar_mem(&H);
+
+  if(mc[7] == 1)
+    liberar_mem(&E);
 
   	remove_proc_entry("matrixmod", NULL); // Eliminar la entrada del /proc
   	printk(KERN_INFO "matrixmod: Modulo descargado.\n");
