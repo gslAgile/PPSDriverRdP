@@ -1017,13 +1017,26 @@ int imprimir_matriz(struct matriz *m, char *buf, size_t len)
 /* Asigna cero a las filas y columnas de todas las matrices */
 void iniciar_matrices(void )
 {
-	I.filas = I.columnas = 0;
+	/* Se inicializan a cero las filas y columnas de todos los vecotres y matrices*/
+  I.filas = I.columnas = 0;
 	MA.filas = MA.columnas = 0;
 	disparos.filas = disparos.columnas = 0;
 	MI.filas = MI.columnas = 0;
 	MN.filas = MN.columnas = 0;
 	H.filas = H.columnas = 0;
+  E.filas = E.columnas = 0;
 
+  /* Se establece el nombre asociado a cada uno de los vectores y matrices*/
+  strcpy(I.nombre, "Matriz I");
+  strcpy(MA.nombre, "Vector MA");
+  strcpy(d.nombre, "Matriz de vectores de disparos");
+  strcpy(MI.nombre, "Vector MI");
+  strcpy(MN.nombre, "Vector MN");
+  strcpy(aux.nombre, "Vector de disparo");
+  strcpy(H.nombre, "Matriz H");
+  strcpy(E.nombre, "Vector E");
+
+  /* Inicializacion de mc (vector detector de matrices creadas) todos en cero (no creadas)*/
 	mc[0] = 0; 		// matriz I no creada
 	mc[1] = 0; 		// vector MA no creado
 	mc[2] = 0; 		// matriz de vectores de disparos no creada
@@ -1032,7 +1045,7 @@ void iniciar_matrices(void )
 	mc[5] = 0; 		// no se creo vector disparo
 	mc[6] = 0; 		// matriz H no creada
 	mc[7] = 0;		// vector E no creado
-	mostrar_mc = 0;
+	mostrar_mc = 0; // puntero de matriz a mostrar por defecto en cero = matriz de incidencia I
 }
 
 int init_modlist_module(void)

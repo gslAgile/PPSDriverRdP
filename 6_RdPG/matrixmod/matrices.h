@@ -11,6 +11,7 @@ struct matriz
 	int **matriz;
 	int filas;
 	int columnas;
+	char[128] nombre;
 };
 
 //Funciones de libreria
@@ -68,12 +69,12 @@ void liberar_mem(struct matriz *x)
 
 	// Liberar memoria para filas m
 	vfree(x->matriz);
-	printk(KERN_INFO "matrixmod: Se libero memoria utilizada en matriz.\n");
+	printk(KERN_INFO "matrixmod: Se libero memoria utilizada en %s.\n", x->nombre);
 	x->filas = 0;
 	x->columnas = 0;
 	}
 	else
-		printk(KERN_INFO "matrixmod: No se pudo liberar memoria.\n");
+		printk(KERN_INFO "matrixmod: No se pudo liberar memoria de %s.\n", x->nombre);
 }
 
 /*
