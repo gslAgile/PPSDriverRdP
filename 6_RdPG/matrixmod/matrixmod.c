@@ -3,7 +3,7 @@
 #include <linux/proc_fs.h>
 #include <asm-generic/uaccess.h>
 #include <linux/list.h>
-#include "matrices.h"
+#include "Librerias_kernel/matrices.h"
 
 #define SUCCESS 0;
 
@@ -1029,10 +1029,10 @@ void iniciar_matrices(void )
   /* Se establece el nombre asociado a cada uno de los vectores y matrices*/
   strcpy(I.nombre, "Matriz I");
   strcpy(MA.nombre, "Vector MA");
-  strcpy(d.nombre, "Matriz de vectores de disparos");
+  strcpy(disparos.nombre, "Matriz de vectores de disparos");
   strcpy(MI.nombre, "Vector MI");
   strcpy(MN.nombre, "Vector MN");
-  strcpy(aux.nombre, "Vector de disparo");
+  strcpy(vauxiliar.nombre, "Vector de disparo");
   strcpy(H.nombre, "Matriz H");
   strcpy(E.nombre, "Vector E");
 
