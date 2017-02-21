@@ -309,7 +309,6 @@ void imprimir_matriz(struct matriz *x)
 * 			 datos resultantes de la matriz transpuesta.
 * @param *x: puntero de una estructura de tipo matriz utilizada para obtener la
 * 			 matriz transpuesta.
-
 */
 void transpuesta(struct matriz *c, struct matriz *x)
 {
