@@ -12,7 +12,7 @@ struct matriz
 	int columnas;
 };
 
-//Funciones de libreria
+// Funciones de libreria
 int **crear_matriz(struct matriz *x);
 void liberar_mem(struct matriz *x);
 void imprimir_matriz(struct matriz *x);
@@ -25,9 +25,6 @@ void leer_fc_matriz(struct matriz *x, char *pfname);
 void cargar_matriz(struct matriz *x, char *pfname);
 void cargar_matriz_cero(struct matriz *x, int filas, int columnas);
 void cout(char *cadena);
-
-
-
 
 // Implementacion de funciones
 /*
@@ -99,7 +96,6 @@ void leer_fc_matriz(struct matriz *x, char *pfname)
 * Parametros:
 * @param **x: Doble puntero de matriz de incidencia.
 */
-
 void cargar_matriz(struct matriz *x, char *pfname)
 {
 	// Se determinan filas columnas de matriz desde archivo	
@@ -114,8 +110,7 @@ void cargar_matriz(struct matriz *x, char *pfname)
 	int filas=0; //
 	int columnas =0; //
 	char *aux;
-
-    	
+  	
     fp= fopen(fname,"r");// se abre archivo de nombre fname
     if( !fp ){
 	   	printf( "Error al intetar abrir %s \n", fname);
@@ -145,7 +140,6 @@ void cargar_matriz(struct matriz *x, char *pfname)
 * Parametros:
 * @param **x: Doble puntero de matriz de incidencia.
 */
-
 void cargar_matriz_cero(struct matriz *x, int filas, int columnas)
 {
 	int i,j;
@@ -189,7 +183,6 @@ int **crear_matriz(struct matriz *x)
 	return m;
 }
 
-
 /*
 * Descripcion: Funcion que obtiene la suma de dos matrices alojando el resultado en
 * 			   en una nueva matriz.
@@ -201,7 +194,6 @@ int **crear_matriz(struct matriz *x)
 * @param *y: puntero de una estructura de tipo matriz utilizada como el segundo
 * 			 operando de la operacion suma.
 */
-
 void sumar_matriz(struct matriz *c, struct matriz *x, struct matriz *y)
 {
 	int i,j;
@@ -275,7 +267,6 @@ void mult_matriz(struct matriz *c, struct matriz *x, struct matriz *y)
 	}
 }
 
-
 /*
 * Descripcion: Funcion que imprime matriz por pantalla.
 * Parametros:
@@ -301,7 +292,6 @@ void imprimir_matriz(struct matriz *x)
 	printf("\n\n");
 }
 
-
 /*
 * Descripcion: Funcion que obtiene la traspuesta de una matriz.
 * Parametros:
@@ -323,7 +313,6 @@ void transpuesta(struct matriz *c, struct matriz *x)
 			c->matriz[i][j]= x->matriz[j][i];
 	}
 }
-
 
 /*
 * Descripcion: Funcion que obtiene la matriz identidad segun dimension.
@@ -353,7 +342,6 @@ void identidad(struct matriz *c, int dimension)
 	}
 }
 
-
 /*
 * Descripcion de funcion: 
 * Parametros:
@@ -363,3 +351,4 @@ void cout(char *cadena)
 {
 	printf("%s", cadena);
 }
+
