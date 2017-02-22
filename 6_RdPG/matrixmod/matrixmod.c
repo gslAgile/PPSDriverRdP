@@ -139,9 +139,9 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
   }else if( sscanf(kbuf,"crear I %s",entrada) == 1) {
 
 		/* Tomar valores de filas y columnas segun la entrada */
-  		tomar_fc(&f, &c, entrada);
+  	tomar_fc(&f, &c, entrada);
   		
-  		/* Creamos matriz I segun entrada recibida */
+  	/* Creamos matriz I segun entrada recibida */
 		crear_rdp(&f, &c, &I, 0); /* 0: hace referencia a mc[0] para detectar que se creo
 						                        una matriz en referencia a esa posicion, en este caso I */
 		
@@ -153,7 +153,7 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
 			ff = 1;
 			cc = I.filas;
 			ffi = I.filas;
-			cci = I.columnas
+			cci = I.columnas;
 
 			/* Creamos vector de marcado actual MA, por defecto en cero sus valores hasta crear MI */
 			crear_rdp(&ff, &cc, &MA, 1); /* 1: hace referencia a mc[1] para detectar que se creo
@@ -163,11 +163,11 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
 			crear_rdp(&ff, &cc, &MN, 4); /* 4: hace referencia a mc[4] para detectar que se creo
   						           una matriz en referencia a esa posicion, en este caso MN */
 
-  			crear_rdp(&ffi, &cci, &H, 6); /* 6: hace referencia a mc[6] para detectar que se creo
+  		crear_rdp(&ffi, &cci, &H, 6); /* 6: hace referencia a mc[6] para detectar que se creo
 							una matriz en referencia a esa posicion, en este caso H */
 
 			/* Creamos vector E de transisiones sensibilizadas, por defecto en cero hasta conocer MI */
-      			cc = I.columnas; // Se asigna cantidad de columnas cc a la cantidad de columnas de I (equivalente a la cantidad de transiciones)
+      cc = I.columnas; // Se asigna cantidad de columnas cc a la cantidad de columnas de I (equivalente a la cantidad de transiciones)
 			crear_rdp(&ff, &cc, &E, 7); /* 7: hace referencia a mc[7] para detectar que se creo
                                        			  una matriz en referencia a esa posicion, en este caso E */
 
@@ -175,8 +175,7 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
 			/* Creamos vector Q, por defecto en cero sus valores hasta crear MI */
 			crear_rdp(&ff, &cc, &Q, 9); /* 9: hace referencia a mc[9] para detectar que se creo
   						          n vector en referencia a esa posicion, en este caso Q */
-		}
-	 
+	 }
   }else if( sscanf(kbuf,"crear MI %s",entrada) == 1) {
 
   		/*Tomar valores de filas y columnas segun la entrada*/
@@ -203,6 +202,7 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
     if(cvmi == I.filas) // Se completo el ingreso de MI?
     {
       	cargar_E();
+        cargar_Q();
     }
 
   }else if ( sscanf(kbuf,"STEP_CMD%s", entrada) == 1){
@@ -214,6 +214,7 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
     		{
 			printk(KERN_INFO "matrixmod_info: El disparo fue exitoso!!!\n");
       			cargar_E();
+            cargar_Q();
     		}
 
 		else
@@ -1114,7 +1115,7 @@ void iniciar_matrices(void )
 	mc[5] = 0; 		// no se creo vector disparo
 	mc[6] = 0; 		// matriz H no creada
 	mc[7] = 0;		// vector E no creado
-	mc[8] = 0;    		// matriz R no creada
+	mc[8] = 0;    // matriz R no creada
 	mc[9] = 0;		// vector Q no creado
 	mostrar_mc = 0; 	// puntero de matriz a mostrar por defecto en cero = matriz de incidencia I
 }
@@ -1168,7 +1169,7 @@ void exit_modlist_module(void)
 	if(mc[8] == 1)
     		liberar_mem(&R);
 
-  	if(mc[9] == 1)
+  if(mc[9] == 1)
     		liberar_mem(&Q);
 
   	remove_proc_entry("matrixmod", NULL); // Eliminar la entrada del /proc

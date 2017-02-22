@@ -20,10 +20,12 @@ void driver_write(char cadena[256], int pfd);
 void driver_read(char *cadena, int pfd);
 void mostrar_I(char *cadena, int pfd);
 void mostrar_H(char *cadena, int pfd);
+void mostrar_R(char *cadena, int pfd);
 void mostrar_MI(char *cadena, int pfd);
 void mostrar_MA(char *cadena, int pfd);
 void mostrar_MN(char *cadena, int pfd);
 void mostrar_E(char *cadena, int pfd);
+void mostrar_Q(char *cadena, int pfd);
 void disparar_trasnsicion(char * cadena, int pfd);
 void matrixmod_crear(char pcomando[256], int f, int c, int pfd);
 void matrixmod_add(char pcomando[256], struct matriz *x, int pfd);
@@ -41,18 +43,20 @@ int main()
 	struct matriz MI;	// Marcado inicial actual
 	struct matriz MN;	// Marcado nuevo
 	struct matriz H; 	// Matriz de incidencia H de brazos inhibidores
+	struct matriz R;	// Matriz de incidencia H de brazos lectores
 	char fname1[256];
 	char fname2[256];
 	
 	/* Se establece el nombre asociado a cada uno de los vectores y matrices*/
   	/*strcpy(I.nombre, "Matriz I");
 	strcpy(MI.nombre, "Vector MI");
-	strcpy(H.nombre, "Vector H");*/
+	strcpy(H.nombre, "Vector H");*/// pendiente hasta actualizacion de libreria de usuario
 
 	/* Carga de matrices desde archivos*/
-	/*cargar_matriz(&I, "MI.txt");
+	cargar_matriz(&I, "MI.txt");
 	cargar_matriz(&MI, "MA.txt");
-	cargar_matriz(&H, "H.txt");*/
+	cargar_matriz(&H, "H.txt"); 
+	cargar_matriz(&R, "R.txt");
 
 	printf("   --> La matriz leida es de dimension [%u]x[%u]", I.filas, I.columnas);
 
@@ -63,7 +67,7 @@ int main()
 	if(fd<0 ) /* Verificacion de creacion*/
 	{
 		//error
-		perror("Error al abrir file descriptor.");
+		perror("	--> Error al abrir file descriptor.\n 	--> Finalizando programa.\n\n");
 		exit(1);
 	}
 
@@ -82,25 +86,34 @@ int main()
 	// Cargamos los valores de la RdP MI al modulo matrixmod
 	matrixmod_add("add MI ", &MI, fd);
 
-	// Creamos matriz Mde incidencia H en matrixmod
+	// Creamos matriz de incidencia H en matrixmod
 	matrixmod_crear("crear H ",H.filas,H.columnas,fd);
-	// Cargamos los valores de la RdP MI al modulo matrixmod
+	// Cargamos los valores de H
 	matrixmod_add("add H ", &H, fd);
+
+	sleep(1); // esperamos 2 segundos para evitar problemas de concurrencia en el kernel
+
+	// Creamos matriz de incidencia R en matrixmod
+	matrixmod_crear("crear R ",R.filas,R.columnas,fd);
+	// Cargamos los valores de R
+	matrixmod_add("add R ", &R, fd);
 
 
 	/* --- MENU DE OPCIONES ---	*/
-    while ( opcion != 8 )
+    while ( opcion != 10 )
     {
         printf( "\n   >>>_			MENU 			_<<<\n");
         printf( "\n   1. Ver matriz de incidencia de la RdP.");
         printf( "\n   2. Ver matriz de incidencia H de la RdPG.");
-        printf( "\n   3. Ver marcado inicial de la RdP.");
-        printf( "\n   4. Ver marcado actual de la RdP.");
-        printf( "\n   5. Ver marcado nuevo de la RdP.");
-        printf( "\n   6. Ver vector E de transicicones sensibilizadas en la RdP.");
-        printf( "\n   7. Disparar transicion sobre RdP.");
-        printf( "\n   8. Salir." );
-        printf( "\n\n   Su seleccion de opcion (1-8): ");
+        printf( "\n   3. Ver matriz de incidencia R de la RdPG.");
+        printf( "\n   4. Ver marcado inicial de la RdP.");
+        printf( "\n   5. Ver marcado actual de la RdP.");
+        printf( "\n   6. Ver marcado nuevo de la RdP.");
+        printf( "\n   7. Ver vector E de transicicones sensibilizadas en la RdP.");
+        printf( "\n   8. Ver vector Q de funcion cero en la RdP.");
+        printf( "\n   9. Disparar transicion sobre RdP.");
+        printf( "\n   10. Salir." );
+        printf( "\n\n   Su seleccion de opcion (1-10): ");
 
         scanf( "%d", &opcion );
 
@@ -112,32 +125,40 @@ int main()
                     mostrar_I(cadena, fd);
                     break;
 
-            case 2: printf( "\n   Matriz de incidencia de la RdP:\n " );
+            case 2: printf( "\n   Matriz de incidencia de brazos inhibidores de la RdP:\n " );
                     mostrar_H(cadena, fd);
                     break;
 
-            case 3: printf( "\n   Marcado inicial de la RdP:\n" );
+            case 3: printf( "\n   Matriz de incidencia de brazos lectores de la RdP:\n " );
+                    mostrar_R(cadena, fd);
+                    break;
+
+            case 4: printf( "\n   Marcado inicial de la RdP:\n" );
                     mostrar_MI(cadena, fd);
                     break;
 
-            case 4: printf( "\n   Marcado actual de la RdP:\n " );
+            case 5: printf( "\n   Marcado actual de la RdP:\n " );
                     mostrar_MA(cadena, fd);
                     break;
 
-            case 5: printf( "\n   Marcado nuevo de la RdP:\n " );
+            case 6: printf( "\n   Marcado nuevo de la RdP:\n " );
                     mostrar_MN(cadena, fd);
                     break;
 
-            case 6: printf( "\n   Vector E de transiciones sensibilizadas:\n " );
+            case 7: printf( "\n   Vector E de transiciones sensibilizadas:\n " );
                     mostrar_E(cadena, fd);
                     break;
 
-            case 7: printf( "\n   Introduzca comando de disparo de transicion: ");
+            case 8: printf( "\n   Vector Q de funcion cero: \n " );
+		            mostrar_Q(cadena, fd);
+		            break;
+
+            case 9: printf( "\n   Introduzca comando de disparo de transicion: ");
             		scanf( "%s", cadena);
                     disparar_trasnsicion(cadena, fd);
                     break;
 
-            case 8: printf( "\n   Saliendo de aplicacion.\n\n");
+            case 10: printf( "\n   Saliendo de aplicacion.\n\n");
             		break;
 
             default: printf("\n   Comando no valido. Intente nuevamente segun opciones de menu.\n " );
@@ -152,6 +173,7 @@ int main()
 	liberar_mem(&I);
 	liberar_mem(&MI);
 	liberar_mem(&H);
+	liberar_mem(&R);
 
     return 0;
 }
@@ -222,7 +244,25 @@ void mostrar_H(char *cadena, int pfd)
 	memset(cadena, '\0', 256);// se limpia cadena
 }
 
+/*
+* @param pfd: identificador file descriptor como parametro
+*/
+void mostrar_R(char *cadena, int pfd)
+{
+	// Write sobre driver
+	driver_write("mostrar R\n", pfd);
 
+	// Read fichero
+	driver_read(cadena, pfd);
+
+	printf("\n%s\n", cadena);
+
+	memset(cadena, '\0', 256);// se limpia cadena
+}
+
+/*
+* @param pfd: identificador file descriptor como parametro
+*/
 void mostrar_MI(char *cadena, int pfd)
 {
 	// Write sobre driver
@@ -269,6 +309,20 @@ void mostrar_E(char *cadena, int pfd)
 {
 	// Write sobre driver
 	driver_write("mostrar E\n", pfd);
+
+	// Read fichero
+	driver_read(cadena, pfd);
+
+	printf("\n%s\n", cadena);
+
+	memset(cadena, '\0', 256);// se limpia cadena
+}
+
+
+void mostrar_Q(char *cadena, int pfd)
+{
+	// Write sobre driver
+	driver_write("mostrar Q\n", pfd);
 
 	// Read fichero
 	driver_read(cadena, pfd);

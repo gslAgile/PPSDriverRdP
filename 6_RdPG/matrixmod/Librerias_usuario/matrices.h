@@ -70,7 +70,8 @@ void leer_fc_matriz(struct matriz *x, char *pfname)
     	
     fp= fopen(fname,"r");// se abre archivo de nombre fname
    	if( !fp ){
-      	printf( "Error al intetar abrir %s \n", fname);
+      	printf("\n   --> Error al intetar abrir %s \n\n   --> Finalizando programa.\n\n", fname);
+      	exit(1);
 	}
 	
    	printf( "\n   --> Leyendo filas y columnas de matriz de incidencia (%s)...\n", fname);
@@ -114,6 +115,7 @@ void cargar_matriz(struct matriz *x, char *pfname)
     fp= fopen(fname,"r");// se abre archivo de nombre fname
     if( !fp ){
 	   	printf( "Error al intetar abrir %s \n", fname);
+	   	exit(1);
 	}
 	
 	/*Leer linea por linea del contenido del archivo(fn) en el buffer */
