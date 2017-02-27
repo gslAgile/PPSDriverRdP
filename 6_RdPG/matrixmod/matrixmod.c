@@ -52,7 +52,6 @@ struct matriz E; 	  // Vector de transiciones sensibilizadas, asociado a mc[7]
 struct matriz Q;	  // Vector asociado a la funcion cero, asociado a mc[9]
 struct matriz W;    // Vector asociado a la funcion uno, asociado a mc[10]
 struct matriz L;    // Vector de transiciones inhibidas por arco lector L, asociado a mc[11]
-struct matriz Laux;    // Vector de transiciones inhibidas por arco lector Laux, asociado a mc[12]
 struct matriz vauxiliar;  // vector donde se almacenara alguno de todos los disparos, asociado a mc[5]
 struct matriz disparos;   // matriz con cada uno de los vectores disparos, asociado a mc[2]
 struct matriz R;          // Matriz de incidencia R asociada a los brazos lectores, asociado a mc[8]
@@ -186,10 +185,6 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
       /* Creamos vector L, por defecto en cero sus valores hasta crear MI */
       crear_rdp(&ff, &cc, &L, 11); /* 11: hace referencia a mc[11] para detectar que se creo
                                           un vector en referencia a esa posicion, en este caso L */
-
-      /* Creamos vector Laux, por defecto en cero sus valores hasta crear MI */
-      crear_rdp(&ff, &cc, &Laux, 12); /* 12: hace referencia a mc[12] para detectar que se creo
-                                          un vector en referencia a esa posicion, en este caso Laux */
 
 			cc = I.filas; // Se asigna cantidad de filas de I a cc (equivalente a la cantidad de plazas)
 			
@@ -336,11 +331,6 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
   
     mostrar_mc = 11; // se selecciona identificador para mostrar la matriz L
     printk(KERN_INFO "matrixmod_info: Se asigna %s para mostrar en funcion read().\n", L.nombre);
-
-  }else if ( strcmp(kbuf,"mostrar Laux\n") == 0){ // strcmp() return : 0 -> si son iguales 
-  
-    mostrar_mc = 12; // se selecciona identificador para mostrar la matriz L
-    printk(KERN_INFO "matrixmod_info: Se asigna %s para mostrar en funcion read().\n", Laux.nombre);
 
   }else if ( strcmp(kbuf,"mostrar Q\n") == 0){ // strcmp() return : 0 -> si son iguales 
   
@@ -705,23 +695,17 @@ void cargar_W(void)
 void cargar_L(void)
 {
     int i, j;
-    for(i=0; i< R.columnas; i++) /* lectura de plazas de matriz R*/
-    {
-        for(j=0; j< R.filas; j++) /* lectura de transiciones de matriz R*/
-        {
-            Laux.matriz[0][i] = Laux.matriz[0][i] + (R.matriz[j][i]*W.matriz[0][j]);
-        }
-    }
 
-    /* Calculo de valores binarios*/
+    /* Inicializacion de valores en sensibilizados uno binario sobre vector L*/
     for(i=0; i < R.columnas; i++)
-    {
-      if(Laux.matriz[0][i]==0)
+      if(L.matriz[0][i]!=1)
         L.matriz[0][i]=1;
 
-      else
-        L.matriz[0][i]=0;
-    }
+    /* Calculo de valores inhibidos (cero binario) sobre vector L*/
+    for(i=0; i< R.columnas; i++) /* lectura de transiciones de matriz R*/
+      for(j=0; j< R.filas; j++) /* lectura de plazas de matriz R*/
+          if(R.matriz[j][i] == 1)
+             L.matriz[0][i] = R.matriz[j][i]*W.matriz[0][j];
 
     printk(KERN_INFO "matrixmod_info: Actualizacion de vector L con exito!!!\n");
 }
@@ -1139,18 +1123,9 @@ static ssize_t matrixmod_read(struct file *filp, char __user *buf, size_t len, l
               nr_bytes = imprimir_matriz(&L, buf, len);
 
             else
-              printk(KERN_INFO "matrixmod_error: Vector Laux no existe.\n");
+              printk(KERN_INFO "matrixmod_error: Vector L no existe.\n");
 
-            break;
-
-      case 12:
-            if(mc[12]==1)
-              nr_bytes = imprimir_matriz(&Laux, buf, len);
-      
-            else
-              printk(KERN_INFO "matrixmod_error: Vector Laux no existe.\n");
-            
-            break;    
+            break;  
 	
   	//default:
   	}
@@ -1234,7 +1209,6 @@ void iniciar_matrices(void )
   R.filas = R.columnas = 0;
   W.filas = W.columnas = 0;
   L.filas = L.columnas = 0;
-  Laux.filas = Laux.columnas = 0;
 
 	/* Se establece el nombre asociado a cada uno de los vectores y matrices */
 	strcpy(I.nombre, "Matriz I");
@@ -1249,7 +1223,6 @@ void iniciar_matrices(void )
   strcpy(Q.nombre, "Vector Q");
   strcpy(W.nombre, "Vector W");
   strcpy(L.nombre, "Vector L");
-  strcpy(Laux.nombre, "Vector Laux");
 
   	/* Inicializacion de mc (vector detector de matrices creadas) todos en cero (no creadas) */
 	mc[0] = 0; 		// matriz I no creada
@@ -1264,7 +1237,6 @@ void iniciar_matrices(void )
 	mc[9] = 0;		// vector Q no creado
   mc[10] = 0;   // vector W no creado
   mc[11] = 0;   // vector L no creado
-  mc[12] = 0;   // vector Laux no creado
 	mostrar_mc = 0; 	// puntero de matriz a mostrar por defecto en cero = matriz de incidencia I
 }
 
@@ -1325,9 +1297,6 @@ void exit_modlist_module(void)
 
   if(mc[11] == 1)
         liberar_mem(&L);
-
-  if(mc[12] == 1)
-        liberar_mem(&Laux);
 
   	remove_proc_entry("matrixmod", NULL); // Eliminar la entrada del /proc
   	printk(KERN_INFO "matrixmod: Modulo descargado de kernel.\n");
