@@ -25,6 +25,8 @@ void mostrar_MI(char *cadena, int pfd);
 void mostrar_MA(char *cadena, int pfd);
 void mostrar_MN(char *cadena, int pfd);
 void mostrar_E(char *cadena, int pfd);
+void mostrar_L(char *cadena, int pfd);
+void mostrar_W(char *cadena, int pfd);
 void mostrar_Q(char *cadena, int pfd);
 void disparar_trasnsicion(char * cadena, int pfd);
 void matrixmod_crear(char pcomando[256], int f, int c, int pfd);
@@ -100,7 +102,7 @@ int main()
 
 
 	/* --- MENU DE OPCIONES ---	*/
-    while ( opcion != 10 )
+    while ( opcion != 12 )
     {
         printf( "\n   >>>_			MENU 			_<<<\n");
         printf( "\n   1. Ver matriz de incidencia de la RdP.");
@@ -110,10 +112,12 @@ int main()
         printf( "\n   5. Ver marcado actual de la RdP.");
         printf( "\n   6. Ver marcado nuevo de la RdP.");
         printf( "\n   7. Ver vector E de transicicones sensibilizadas en la RdP.");
-        printf( "\n   8. Ver vector Q de funcion cero en la RdP.");
-        printf( "\n   9. Disparar transicion sobre RdP.");
-        printf( "\n   10. Salir." );
-        printf( "\n\n   Su seleccion de opcion (1-10): ");
+        printf( "\n   8. Ver vector L de transicicones inhibidas por arco lector en la RdP.");
+        printf( "\n   9. Ver vector W de funcion cero en la RdP.");
+        printf( "\n   10. Ver vector Q de funcion cero en la RdP.");
+        printf( "\n   11. Disparar transicion sobre RdP.");
+        printf( "\n   12. Salir." );
+        printf( "\n\n   Su seleccion de opcion (1-11): ");
 
         scanf( "%d", &opcion );
 
@@ -149,16 +153,24 @@ int main()
                     mostrar_E(cadena, fd);
                     break;
 
-            case 8: printf( "\n   Vector Q de funcion cero: \n " );
+            case 8: printf( "\n   Vector L de transiciones des-sensibilizadas:\n " );
+                    mostrar_L(cadena, fd);
+                    break;
+
+            case 9: printf( "\n   Vector W de funcion uno: \n " );
+		            mostrar_W(cadena, fd);
+		            break;
+
+		    case 10: printf( "\n   Vector Q de funcion cero: \n " );
 		            mostrar_Q(cadena, fd);
 		            break;
 
-            case 9: printf( "\n   Introduzca comando de disparo de transicion: ");
+            case 11: printf( "\n   Introduzca comando de disparo de transicion: ");
             		scanf( "%s", cadena);
                     disparar_trasnsicion(cadena, fd);
                     break;
 
-            case 10: printf( "\n   Saliendo de aplicacion.\n\n");
+            case 12: printf( "\n   Saliendo de aplicacion.\n\n");
             		break;
 
             default: printf("\n   Comando no valido. Intente nuevamente segun opciones de menu.\n " );
@@ -309,6 +321,34 @@ void mostrar_E(char *cadena, int pfd)
 {
 	// Write sobre driver
 	driver_write("mostrar E\n", pfd);
+
+	// Read fichero
+	driver_read(cadena, pfd);
+
+	printf("\n%s\n", cadena);
+
+	memset(cadena, '\0', 256);// se limpia cadena
+}
+
+
+void mostrar_L(char *cadena, int pfd)
+{
+	// Write sobre driver
+	driver_write("mostrar L\n", pfd);
+
+	// Read fichero
+	driver_read(cadena, pfd);
+
+	printf("\n%s\n", cadena);
+
+	memset(cadena, '\0', 256);// se limpia cadena
+}
+
+
+void mostrar_W(char *cadena, int pfd)
+{
+	// Write sobre driver
+	driver_write("mostrar W\n", pfd);
 
 	// Read fichero
 	driver_read(cadena, pfd);
