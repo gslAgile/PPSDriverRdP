@@ -34,6 +34,7 @@ void cargar_MA(void);
 void cargar_E(void);
 void cargar_Q(void);
 void cargar_W(void);
+void cargar_B(void);
 void cargar_L(void);
 void tomar_transicion(char *entrada, int *transicion);
 
@@ -52,6 +53,7 @@ struct matriz E; 	  // Vector de transiciones sensibilizadas, asociado a mc[7]
 struct matriz Q;	  // Vector asociado a la funcion cero, asociado a mc[9]
 struct matriz W;    // Vector asociado a la funcion uno, asociado a mc[10]
 struct matriz L;    // Vector de transiciones inhibidas por arco lector L, asociado a mc[11]
+struct matriz B;    // Vector de transiciones inhibidas por arco inhibidor B, asociado a mc[12]
 struct matriz vauxiliar;  // vector donde se almacenara alguno de todos los disparos, asociado a mc[5]
 struct matriz disparos;   // matriz con cada uno de los vectores disparos, asociado a mc[2]
 struct matriz R;          // Matriz de incidencia R asociada a los brazos lectores, asociado a mc[8]
@@ -62,7 +64,8 @@ int mostrar_mc; // entero identificatorio de cual de las matrices creadas mostra
 int cd; // numero de vectores y elementos en vector disparo
 int count_read = 0; // contador de lecturas en modulo
 int cvmi = 0; // cvmi: contador de valores ingresados en MI
-int cvmr = 0; // cvmr: contador de valores ingresados en MR
+int cvmr = 0; // cvmr: contador de valores ingresados en matriz R
+int cvmh = 0; // cvmr: contador de valores ingresados en matriz H
 
 // Implementacion de Funciones
 /*
@@ -136,16 +139,22 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
   }else if( sscanf(kbuf,"add H %s", entrada) == 1){
 		
 		agregar_valor(entrada, vaux, faux, caux, &H);
+    cvmh++;
+    if(cvmh == (H.filas*H.columnas)) /* Se completo el ingreso de los elementos de la matriz H ??*/
+    {
+      cvmh = 0;
+      cargar_B();
+    }
 
   }else if( sscanf(kbuf,"add R %s", entrada) == 1){
     
-    		agregar_valor(entrada, vaux, faux, caux, &R);
-        cvmr++;
-        if(cvmr == (R.filas*R.columnas)) /* Se completo el ingreso de los elementos de la matriz R ??*/
-        {
-          cvmr = 0;
-          cargar_L();
-        }
+		agregar_valor(entrada, vaux, faux, caux, &R);
+    cvmr++;
+    if(cvmr == (R.filas*R.columnas)) /* Se completo el ingreso de los elementos de la matriz R ??*/
+    {
+      cvmr = 0;
+      cargar_L();
+    }
 
   }else if( sscanf(kbuf,"crear I %s",entrada) == 1) {
 
@@ -186,6 +195,10 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
       crear_rdp(&ff, &cc, &L, 11); /* 11: hace referencia a mc[11] para detectar que se creo
                                           un vector en referencia a esa posicion, en este caso L */
 
+      /* Creamos vector B, por defecto en cero sus valores hasta crear MI */
+      crear_rdp(&ff, &cc, &B, 12); /* 12: hace referencia a mc[12] para detectar que se creo
+                                          un vector en referencia a esa posicion, en este caso B */
+
 			cc = I.filas; // Se asigna cantidad de filas de I a cc (equivalente a la cantidad de plazas)
 			
       /* Creamos vector Q, por defecto en cero sus valores hasta crear MI */
@@ -195,7 +208,6 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
       /* Creamos vector W, por defecto en cero sus valores hasta crear MI */
       crear_rdp(&ff, &cc, &W, 10); /* 10: hace referencia a mc[10] para detectar que se creo
                                           un vector en referencia a esa posicion, en este caso W */
-
 	   }
   }else if( sscanf(kbuf,"crear MI %s",entrada) == 1) {
 
@@ -239,6 +251,7 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
     	cargar_E();
       cargar_Q();
       cargar_W();
+      cargar_B();
       cargar_L();
     }
 
@@ -332,6 +345,11 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
     mostrar_mc = 11; // se selecciona identificador para mostrar la matriz L
     printk(KERN_INFO "matrixmod_info: Se asigna %s para mostrar en funcion read().\n", L.nombre);
 
+  }else if ( strcmp(kbuf,"mostrar B\n") == 0){ // strcmp() return : 0 -> si son iguales 
+  
+    mostrar_mc = 12; // se selecciona identificador para mostrar la matriz L
+    printk(KERN_INFO "matrixmod_info: Se asigna %s para mostrar en funcion read().\n", B.nombre);
+
   }else if ( strcmp(kbuf,"mostrar Q\n") == 0){ // strcmp() return : 0 -> si son iguales 
   
   	mostrar_mc = 9; // se selecciona identificador para mostrar el vector Q
@@ -364,8 +382,8 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
 
   }else if ( strcmp(kbuf,"mostrar mc\n") == 0){ // strcmp() return : 0 -> si son iguales 
 	
-	 printk(KERN_INFO "matrixmod_info: mc = [%d %d %d %d %d %d %d %d %d %d %d %d]\n", mc[0], mc[1], mc[2], mc[3],
-   mc[4], mc[5], mc[6], mc[7], mc[8], mc[9], mc[10], mc[11]);
+	 printk(KERN_INFO "matrixmod_info: mc = [%d %d %d %d %d %d %d %d %d %d %d %d %d]\n", mc[0], mc[1], mc[2], mc[3],
+   mc[4], mc[5], mc[6], mc[7], mc[8], mc[9], mc[10], mc[11], mc[12]);
 
   }else
 	    printk(KERN_INFO "ERROR: comando no valido!!!\n");
@@ -686,9 +704,34 @@ void cargar_W(void)
 }
 
 /*
+* Descripcion: Esta funcion se encarga de cargar el vector B, una vez que se completo la carga de MI, H y Q.
+* El vector B que carga la funcion, es un vector de valores binarios de dimension mx1 (siendo m la cantidad de
+* transiciones existentes en la RdP) que indica con un cero cuales transiciones estan inhibidas por el arco 
+* inhibidor y con un uno las que no.
+* @param: no se reciben parametros en la funcion.
+*/
+void cargar_B(void)
+{
+    int i, j;
+
+    /* Inicializacion de valores en sensibilizados (uno binario) sobre vector B*/
+    for(i=0; i < H.columnas; i++)
+      if(B.matriz[0][i]!=1)
+        B.matriz[0][i]=1;
+
+    /* Calculo de valores inhibidos (cero binario) sobre vector B*/
+    for(i=0; i< H.columnas; i++) /* lectura de transiciones de matriz H*/
+      for(j=0; j< H.filas; j++) /* lectura de plazas de matriz H*/
+          if(H.matriz[j][i] == 1)
+             B.matriz[0][i] = H.matriz[j][i]*Q.matriz[0][j];
+
+    printk(KERN_INFO "matrixmod_info: Actualizacion de vector B con exito!!!\n");
+}
+
+/*
 * Descripcion: Esta funcion se encarga de cargar el vector L, una vez que se completo la carga de MI, R y W.
 * El vector L que carga la funcion, es un vector de valores binarios de dimension mx1 (siendo m la cantidad de
-* trnasiciones existentes en la RdP) que indica con un cero cuales transiciones estan inhibidas por el arco y
+* transiciones existentes en la RdP) que indica con un cero cuales transiciones estan inhibidas por el arco y
 * un uno las que no.
 * @param: no se reciben parametros en la funcion.
 */
@@ -696,7 +739,7 @@ void cargar_L(void)
 {
     int i, j;
 
-    /* Inicializacion de valores en sensibilizados uno binario sobre vector L*/
+    /* Inicializacion de valores en sensibilizados (uno binario) sobre vector L*/
     for(i=0; i < R.columnas; i++)
       if(L.matriz[0][i]!=1)
         L.matriz[0][i]=1;
@@ -1125,7 +1168,16 @@ static ssize_t matrixmod_read(struct file *filp, char __user *buf, size_t len, l
             else
               printk(KERN_INFO "matrixmod_error: Vector L no existe.\n");
 
-            break;  
+            break;
+
+      case 12:
+            if(mc[12]==1)
+              nr_bytes = imprimir_matriz(&B, buf, len);
+
+            else
+              printk(KERN_INFO "matrixmod_error: Vector B no existe.\n");
+
+            break;
 	
   	//default:
   	}
@@ -1209,6 +1261,7 @@ void iniciar_matrices(void )
   R.filas = R.columnas = 0;
   W.filas = W.columnas = 0;
   L.filas = L.columnas = 0;
+  B.filas = B.columnas = 0;
 
 	/* Se establece el nombre asociado a cada uno de los vectores y matrices */
 	strcpy(I.nombre, "Matriz I");
@@ -1223,6 +1276,7 @@ void iniciar_matrices(void )
   strcpy(Q.nombre, "Vector Q");
   strcpy(W.nombre, "Vector W");
   strcpy(L.nombre, "Vector L");
+  strcpy(B.nombre, "Vector B");
 
   	/* Inicializacion de mc (vector detector de matrices creadas) todos en cero (no creadas) */
 	mc[0] = 0; 		// matriz I no creada
@@ -1237,6 +1291,7 @@ void iniciar_matrices(void )
 	mc[9] = 0;		// vector Q no creado
   mc[10] = 0;   // vector W no creado
   mc[11] = 0;   // vector L no creado
+  mc[12] = 0;   // vector B no creado
 	mostrar_mc = 0; 	// puntero de matriz a mostrar por defecto en cero = matriz de incidencia I
 }
 
@@ -1284,22 +1339,25 @@ void exit_modlist_module(void)
 		liberar_mem(&H);
 
   if(mc[7] == 1)
-    		liberar_mem(&E);
+    liberar_mem(&E);
 
 	if(mc[8] == 1)
-    		liberar_mem(&R);
+    liberar_mem(&R);
 
   if(mc[9] == 1)
-    		liberar_mem(&Q);
+    liberar_mem(&Q);
 
   if(mc[10] == 1)
-        liberar_mem(&W);
+    liberar_mem(&W);
 
   if(mc[11] == 1)
-        liberar_mem(&L);
+    liberar_mem(&L);
 
-  	remove_proc_entry("matrixmod", NULL); // Eliminar la entrada del /proc
-  	printk(KERN_INFO "matrixmod: Modulo descargado de kernel.\n");
+  if(mc[12] == 1)
+    liberar_mem(&B);
+
+  remove_proc_entry("matrixmod", NULL); // Eliminar la entrada del /proc
+  printk(KERN_INFO "matrixmod: Modulo descargado de kernel.\n");
 }
 
 module_init(init_modlist_module);
