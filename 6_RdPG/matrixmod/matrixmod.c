@@ -30,6 +30,7 @@ void tomar_fc(int *f, int *c, char *entrada);
 void crear_rdp(int *f, int *c, struct matriz *m, int pmc);
 void crear_mdisparos(int c, int mc_id);
 int disparar(int id_d, char mode);
+int disparar_rdpg(int id_d, char mode);
 void cargar_MA(void);
 void cargar_E(void);
 void cargar_Q(void);
@@ -38,6 +39,7 @@ void cargar_B(void);
 void cargar_L(void);
 void cargar_Ex(void);
 void tomar_transicion(char *entrada, int *transicion);
+void cargar_cero(struct matriz *m);
 
 static struct proc_dir_entry *proc_entry; // Entrada de /proc
 
@@ -251,19 +253,11 @@ static ssize_t matrixmod_write(struct file *filp, const char __user *buf, size_t
 	tomar_transicion(entrada, &transicion);
 	if(transicion > -1 && transicion < I.filas) // Si realizo disparo exitosamente
 	{
-		if(disparar(transicion, 'E') == 1)
-    {
+		if(disparar_rdpg(transicion, 'E') == 1)
 			printk(KERN_INFO "matrixmod_info: El disparo fue exitoso!!!\n");
-    	cargar_E();
-      cargar_Q();
-      cargar_W();
-      cargar_B();
-      cargar_L();
-      cargar_Ex();
-    }
 
 		else
-		printk(KERN_INFO "matrixmod_info: El disparo no fue exitoso!!!\n");
+		  printk(KERN_INFO "matrixmod_info: El disparo no fue exitoso!!!\n");
 	}
 
 	else
@@ -640,7 +634,86 @@ int disparar(int id_d, char mode)
     	for (i = 0; i <I.filas ; i++)
     		MA.matriz[0][i] = MN.matriz[0][i];
 
-	return 1;	
+	return 1;
+}
+
+
+/*
+* Descripcion: Esta funcion realiza el disparo sobre la RdPG de acuerdo a un vector de disparo indicado
+* por parametro, verificando la sensibilidad de la RdPG para ese disparo, actualizando o no el marcado actual.
+* @param id_d: identificador de disparo a realizar sobre RdP.
+* @param mode: indica el modo de disparo.
+               - I: modo implicito, no actualiza el vector de marcado actual MA
+               - E: modo explicito, actualiza el vector de marcado actual MA
+* @return -1: si no se puede realizar disparo sobre RdPG (RdPG no esta sensibilizada para ese disparo).
+* @return 1: si puedo realizar disparo sobre RdPG (RdPG estaba sensibilizada para ese disparo).
+*/
+int disparar_rdpg(int id_d, char mode)
+{
+  /* Creo vector de disparo representado por vauxiliar */ 
+  vauxiliar.filas = disparos.filas;
+  vauxiliar.columnas =  1;
+
+  transpuesta_fc(&vauxiliar, &disparos, vauxiliar.filas, 1, id_d);
+  mc[5]=1; // Se creo vector disparo
+
+  /* Se calculo vector Ex*/
+  cargar_Ex();
+
+  // Disparar
+  int i, j, auxMN, cvi = 0; /* cvi: contador de valores iguales entre MA y MN*/
+  for (i = 0; i < I.columnas; i++)
+  {
+    if(vauxiliar.matriz[i][0]==1)
+    {
+      for (j = 0; j < I.filas; j++)
+      {
+        if(mode == 'E')
+        {
+            MN.matriz[0][j] = MA.matriz[0][j] + I.matriz[j][i]*vauxiliar.matriz[i][0]*Ex.matriz[0][i];
+            if(MN.matriz[0][j]< 0)
+              return -1;
+        }
+        else // modo de disparo implicito no intera almacenar el estado de MN ni MA pero si saberlo
+        {
+            // Se almacena de manera auxiliar los valores del nuevo estado de la transicion, para verificar si esta sensibilizada
+            auxMN = MA.matriz[0][j] + I.matriz[j][i]*vauxiliar.matriz[i][0]*Ex.matriz[0][i];
+            if(auxMN < 0)
+              return -1;
+        }
+      }
+    }
+  }
+
+  /* Verificacion de igualdad de estado actual y nuevo (debido a que Ex = [0 0 ... 0])*/
+  for (i = 0; i <I.filas ; i++)
+  {
+     if (MA.matriz[0][i] == MN.matriz[0][i])
+      cvi++;
+
+     if(cvi == I.filas) /* contador igual a cantidad de plazas ?*/
+     {
+        cvi=0;
+        // cargar MN a cero ...
+        cargar_cero(&MN);
+        return -1; // return -1 ya que no se realizo cambio de estado en la RdPG por Ex = [0 0 ... 0] -> caso exepcional!!!
+     }
+  }
+
+  /* Actualizacion de marcado actual*/
+  if(mode == 'E')
+    for (i = 0; i <I.filas ; i++)
+       MA.matriz[0][i] = MN.matriz[0][i];
+
+  /* Actualizacion de vectores de RdPG*/
+  cargar_E();
+  cargar_Q();
+  cargar_W();
+  cargar_B();
+  cargar_L();
+  cargar_Ex();
+
+  return 1;
 }
 
 /*
@@ -783,6 +856,20 @@ void cargar_Ex(void)
 
     printk(KERN_INFO "matrixmod_info: Actualizacion del vector Ex con exito!!!\n");
 }
+
+/*
+* Descripcion: Esta funcion se encarga de cargar la matriz/vector *m, que se indica como puntero, todos sus
+* valores a cero.
+* @param *m: puntero de la matriz/vectoe sobre la que se desea cargar a cero sus valores
+*/
+void cargar_cero(struct matriz *m)
+{
+  int i,j;
+  for(i=0; i<m->filas; i++)
+    for(j=0; j<m->columnas; j++)
+      m->matriz[i][j] =0;
+}
+
 
 /*
 * Descripcion: Esta funcion...
