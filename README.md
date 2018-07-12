@@ -10,7 +10,7 @@
   
   **Tema:** Desarrollo de modulos sobre el kernel de Linux
   
-  **Estado de PPS:** En curso
+  **Estado de PPS:** Finalizada (Marzo | 2017)
   
   **Objetivos:**
   
