@@ -107,19 +107,19 @@ int main()
     while ( opcion != 14 )
     {
         printf( "\n   >>>_			MENU 			_<<<\n");
-        printf( "\n   1. Ver matriz de incidencia de la RdP.");
+        printf( "\n   1. Ver matriz de incidencia de la RdPG.");
         printf( "\n   2. Ver matriz de incidencia H de la RdPG.");
         printf( "\n   3. Ver matriz de incidencia R de la RdPG.");
-        printf( "\n   4. Ver marcado inicial de la RdP.");
-        printf( "\n   5. Ver marcado actual de la RdP.");
-        printf( "\n   6. Ver marcado nuevo de la RdP.");
-        printf( "\n   7. Ver vector E de transicicones sensibilizadas en la RdP.");
-        printf( "\n   8. Ver vector B de transicicones inhibidas por arco inhibidor en la RdP.");
-        printf( "\n   9. Ver vector L de transicicones inhibidas por arco lector en la RdP.");
-        printf( "\n   10. Ver vector Ex de transicicones sensibilizadas extendido en la RdP.");
-        printf( "\n   11. Ver vector W de funcion cero en la RdP.");
-        printf( "\n   12. Ver vector Q de funcion cero en la RdP.");
-        printf( "\n   13. Disparar transicion sobre RdP.");
+        printf( "\n   4. Ver marcado inicial de la RdPG.");
+        printf( "\n   5. Ver marcado actual de la RdPG.");
+        printf( "\n   6. Ver marcado nuevo de la RdPG.");
+        printf( "\n   7. Ver vector E de transicicones sensibilizadas en la RdPG.");
+        printf( "\n   8. Ver vector B de transicicones inhibidas por arco inhibidor en la RdPG.");
+        printf( "\n   9. Ver vector L de transicicones inhibidas por arco lector en la RdPG.");
+        printf( "\n   10. Ver vector Ex de transicicones sensibilizadas extendido en la RdPG.");
+        printf( "\n   11. Ver vector W de funcion cero en la RdPG.");
+        printf( "\n   12. Ver vector Q de funcion cero en la RdPG.");
+        printf( "\n   13. Disparar transicion sobre RdPG.");
         printf( "\n   14. Salir." );
         printf( "\n\n   Su seleccion de opcion (1-14): ");
 
